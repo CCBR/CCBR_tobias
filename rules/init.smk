@@ -1,3 +1,5 @@
+import shutil
+
 CONFIGFILE = str(workflow.overwrite_configfiles[0])
 
 #
@@ -20,6 +22,15 @@ except KeyError:
 ## Load tools from YAML file
 with open(config["tools"]) as f:
 	TOOLS = yaml.safe_load(f)
+
+GENOME = config["genome"]
+REFFA = config["reffa"][GENOME]
+AUTOCORRECT_EXTRA_PARAMS = config["autocorrect_extra_params"]
+BLACKLIST = config["blacklist"]
+if BLACKLIST != "":
+	BLACKLIST = "--blackist "+BLACKLIST
+PEAKS = join(WORKDIR,"peaks.bed")
+shutil.copyfile(config["peaks"],PEAKS)
 
 
 # print(config["data"])
