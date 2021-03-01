@@ -1,0 +1,8 @@
+bedtools:
+  version: "bedtools/2.30.0"
+samtools:
+  version: "samtools/1.9"
+sambamba:
+  version: "sambamba/0.8.0"
+ucsc:
+  version: "ucsc/410"
