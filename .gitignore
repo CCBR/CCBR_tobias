@@ -1,4 +1,5 @@
 **/.koparde*
+**/.vscode*
 !.editorconfig
 !.gitignore
 !.gitattributes
