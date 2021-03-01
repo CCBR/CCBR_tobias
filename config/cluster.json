@@ -13,5 +13,15 @@
         "mem": "200g",
         "threads": "4",
         "time": "48:00:00"
+    },
+    "condition_bam": {
+        "mem": "200g",
+        "threads": "16",
+        "time": "48:00:00"
+    },
+    "autocorrect": {
+        "mem": "200g",
+        "threads": "56",
+        "time": "48:00:00"
     }
 }
