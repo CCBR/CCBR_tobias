@@ -11,7 +11,8 @@ data:
   iCre_D0: [/data/CCBR/projects/ccbr872/atacseq/test/bam/iCre_D0_*.qsorted.bam]
   iCre_D2_EpiLSC: [/data/CCBR/projects/ccbr872/atacseq/test/bam/iCre_D2_EpiLSC_*.qsorted.bam]
   D3_NMP_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iCre_Dox_*.qsorted.bam]
-
+peaks: "/data/CCBR/projects/ccbr872/atacseq/test/peaks/genrich/tn5knicks/query_regions.bed"
+genome: "mm10"
 
 # D3_FGF_iCre_Dox
 # D3_FGF_Nkx1_2_Dox
@@ -34,3 +35,8 @@ data:
 #
 # You may never need to change these
 tools: "PIPELINE_HOME/config/tools.yaml"
+reffa:
+  mm10: "/data/CCBR_Pipeliner/db/PipeDB/Indices/mm10_basic/mm10_basic.fa"
+  hg38: "/data/CCBR_Pipeliner/db/PipeDB/Indices/hg38_basic/hg38_basic.fa"
+autocorrect_extra_params: ""
+blacklist: ""
