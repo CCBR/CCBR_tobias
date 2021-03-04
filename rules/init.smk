@@ -26,7 +26,10 @@ with open(config["tools"]) as f:
 GENOME = config["genome"]
 REFFA = config["reffa"][GENOME]
 AUTOCORRECT_EXTRA_PARAMS = config["autocorrect_extra_params"]
+FOOTPRINTING_EXTRA_PARAMS = config["footprinting_extra_params"]
+BINDETECT_EXTRA_PARAMS = config["bindetect_extra_params"]
 BLACKLIST = config["blacklist"]
+MOTIFS = config["motifs"]
 if BLACKLIST != "":
 	BLACKLIST = "--blackist "+BLACKLIST
 PEAKS = join(WORKDIR,"peaks.bed")
