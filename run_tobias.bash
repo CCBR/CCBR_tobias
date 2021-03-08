@@ -194,7 +194,7 @@ snakemake -s $SNAKEFILE \
 --latency-wait 120 \
 --configfile ${WORKDIR}/config.yaml \
 --cluster-config ${PIPELINE_HOME}/config/cluster.json \
---cluster "sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} -p {cluster.partition} -t {cluster.time} --mem {cluster.mem} --job-name {cluster.name} --output {cluster.output} --error {cluster.error}" \
+--cluster "sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} -p {cluster.partition} -t {cluster.time} --mem {cluster.mem} --job-name {cluster.name} --output {cluster.output} --error {cluster.error} --qos=ccrcore" \
 -j 500 \
 --rerun-incomplete \
 --keep-going \
