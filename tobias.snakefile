@@ -18,7 +18,7 @@ rule all:
 		expand(join(WORKDIR, "bias_correction", "{condition}_expected.bw"), condition=CONDITION_IDS),
 		expand(join(WORKDIR, "bias_correction", "{condition}_corrected.bw"), condition=CONDITION_IDS),
 		expand(join(WORKDIR, "footprinting", "{condition}_footprints.bw"), condition=CONDITION_IDS),
-		# expand(join(WORKDIR, "overview", "all_{condition}_bound.bed"), condition=CONDITION_IDS),
+		expand(join(WORKDIR, "overview", "all_{condition}_bound.bed"), condition=CONDITION_IDS),
 
 rule condition_bam:
 	input:
