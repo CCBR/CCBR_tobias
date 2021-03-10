@@ -2,7 +2,7 @@
     "__default__": {
         "gres": "lscratch:256",
         "mem": "20g",
-        "partition": "norm,ccr",
+        "partition": "ccr","qos": "ccrcore",
         "threads": "2",
         "time": "4:00:00",
         "name"      : "{rule}.{wildcards}",
@@ -30,8 +30,12 @@
         "time": "48:00:00"
     },
     "bindetect": {
-        "mem": "200g",
-        "threads": "56",
+        "mem": "1200g",
+        "threads": "72",
+        "partition": "largemem","qos": "global",
+        "time": "96:00:00"
+    },
+    "join_bound":{
         "time": "96:00:00"
     }
 }
