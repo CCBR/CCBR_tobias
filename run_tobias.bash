@@ -13,6 +13,8 @@ set -eo pipefail
 module purge
 
 SINGULARITY_BINDS="-B /data/CCBR_Pipeliner/:/data/CCBR_Pipeliner/"
+SINGULARITY_BINDS="$SINGULARITY_BINDS -B /data/kopardevn/:/data/kopardevn/"
+SINGULARITY_BINDS="$SINGULARITY_BINDS -B /data/CCBR/projects/ccbr872/atacseq/test/peaks/genrich/tn5knicks/"
 
 function get_git_commitid_tag() {
   cd $1
@@ -146,7 +148,7 @@ function run() {
 
   preruncleanup
 
-  snakemake -s ${PIPELINE_HOME}/$SNAKEFILE \
+  snakemake -s $SNAKEFILE \
   --directory $WORKDIR \
   --printshellcmds \
   --use-singularity \
@@ -159,7 +161,7 @@ function run() {
   2>&1|tee ${WORKDIR}/snakemake.log
 
   if [ "$?" -eq "0" ];then
-    snakemake -s ${PIPELINE_HOME}/$SNAKEFILE \
+    snakemake -s $SNAKEFILE \
     --report ${WORKDIR}/runlocal_snakemake_report.html \
     --directory $WORKDIR \
     --configfile ${WORKDIR}/config.yaml 
