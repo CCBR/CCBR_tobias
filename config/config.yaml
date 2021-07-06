@@ -7,29 +7,33 @@ workdir: "WORKDIR"
 # data:
 #   Group1/Condition1: [list of group1 sample bams]
 #   Group2/Condition2: [list of group2 sample bams]
+# data:
+#   iCre_D0: [/data/CCBR/projects/ccbr872/atacseq/test/bam/iCre_D0_*.dedup.bam]
+#   iCre_D2_EpiLSC: [/data/CCBR/projects/ccbr872/atacseq/test/bam/iCre_D2_EpiLSC_*.dedup.bam]
+#   D3_FGF_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_FGF_iCre_Dox_*.dedup.bam]
+#   D3_FGF_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_FGF_Nkx1_2_Dox_*.dedup.bam]
+#   D3_NMP_iCre: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iCre_*.dedup.bam]
+#   D3_NMP_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iCre_Dox_*.dedup.bam]
+#   D3_NMP_iFSp5_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iFSp5_Dox_*.dedup.bam]
+#   D3_NMP_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_Nkx1_2_Dox_*.dedup.bam]
+#   D4_Meso_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Meso_iCre_Dox_*.dedup.bam]
+#   D4_Meso_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Meso_Nkx1_2_Dox_*.dedup.bam]
+#   D4_Neural_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Neural_iCre_Dox_*.dedup.bam]
+#   D4_Neural_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Neural_Nkx1_2_Dox_*.dedup.bam]
+#   Sp5_8_dko_1_D3_NMP: [/data/CCBR/projects/ccbr872/atacseq/test/bam/Sp5_8_dko_1_D3_NMP_*.dedup.bam]
+#   WT_7_D3_NMP: [/data/CCBR/projects/ccbr872/atacseq/test/bam/WT_7_D3_NMP_*.dedup.bam]
+
+# contrasts: 
+#   A: ["iCre_D2_EpiLSC","iCre_D0"]
+#   B: ["D3_FGF_iCre_Dox","iCre_D0"]
+#   C: ["D3_NMP_iCre_Dox","iCre_D0"]
+#   D: ["D4_Meso_iCre_Dox","iCre_D0"]
+#   E: ["D4_Neural_iCre_Dox","iCre_D0"]
+
 data:
   iCre_D0: [/data/CCBR/projects/ccbr872/atacseq/test/bam/iCre_D0_*.dedup.bam]
   iCre_D2_EpiLSC: [/data/CCBR/projects/ccbr872/atacseq/test/bam/iCre_D2_EpiLSC_*.dedup.bam]
   D3_FGF_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_FGF_iCre_Dox_*.dedup.bam]
-  D3_FGF_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_FGF_Nkx1_2_Dox_*.dedup.bam]
-  D3_NMP_iCre: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iCre_*.dedup.bam]
-  D3_NMP_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iCre_Dox_*.dedup.bam]
-  D3_NMP_iFSp5_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_iFSp5_Dox_*.dedup.bam]
-  D3_NMP_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D3_NMP_Nkx1_2_Dox_*.dedup.bam]
-  D4_Meso_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Meso_iCre_Dox_*.dedup.bam]
-  D4_Meso_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Meso_Nkx1_2_Dox_*.dedup.bam]
-  D4_Neural_iCre_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Neural_iCre_Dox_*.dedup.bam]
-  D4_Neural_Nkx1_2_Dox: [/data/CCBR/projects/ccbr872/atacseq/test/bam/D4_Neural_Nkx1_2_Dox_*.dedup.bam]
-  Sp5_8_dko_1_D3_NMP: [/data/CCBR/projects/ccbr872/atacseq/test/bam/Sp5_8_dko_1_D3_NMP_*.dedup.bam]
-  WT_7_D3_NMP: [/data/CCBR/projects/ccbr872/atacseq/test/bam/WT_7_D3_NMP_*.dedup.bam]
-
-contrasts: 
-  A: ["iCre_D2_EpiLSC","iCre_D0"]
-  B: ["D3_FGF_iCre_Dox","iCre_D0"]
-  C: ["D3_NMP_iCre_Dox","iCre_D0"]
-  D: ["D4_Meso_iCre_Dox","iCre_D0"]
-  E: ["D4_Neural_iCre_Dox","iCre_D0"]
-
 
 peaks: "/data/CCBR/projects/ccbr872/atacseq/test/peaks/genrich/tn5knicks/query_regions.bed"
 annotatedpeaks: "/data/kopardevn/GitRepos/CCBR_tobias/scripts/other/merged_peaks"
