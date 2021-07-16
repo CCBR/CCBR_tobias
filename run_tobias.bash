@@ -9,12 +9,24 @@
 # ## clone the pipeline to a folder
 # ## git clone https://github.com/loosolab/TOBIAS.git
 
+PYTHON_VERSION="python/3.7"
+SNAKEMAKE_VERSION="snakemake"
+SINGULARITY_VERSION="singularity/3.7.4"
+
+SCRIPTNAME="$0"
+SCRIPTBASENAME=$(readlink -f $(basename $0))
+
+# set extra singularity bindings comma separated
+EXTRA_SINGULARITY_BINDS="/lscratch"
+
+# essential files
+# these are relative to the workflows' base folder
+# these are copied into the WORKDIR
+ESSENTIAL_FILES="config/config.yaml config/uropa_base_config.yaml config/cluster.json config/tools.yaml"
+ESSENTIAL_FOLDERS="scripts"
+
 set -eo pipefail
 module purge
-
-SINGULARITY_BINDS="-B /data/CCBR_Pipeliner/:/data/CCBR_Pipeliner/"
-SINGULARITY_BINDS="$SINGULARITY_BINDS -B /data/kopardevn/:/data/kopardevn/"
-SINGULARITY_BINDS="$SINGULARITY_BINDS -B /data/CCBR/projects/ccbr872/atacseq/test/peaks/genrich/tn5knicks/"
 
 function get_git_commitid_tag() {
   cd $1
@@ -33,20 +45,31 @@ SNAKEFILE="${PIPELINE_HOME}/tobias.snakefile"
 GIT_COMMIT_TAG=$(get_git_commitid_tag $PIPELINE_HOME)
 echo "Git Commit/Tag: $GIT_COMMIT_TAG"
 
+
+############################################################################
+# FUNCTIONS
+############################################################################
+
+
 function usage() { cat << EOF
-run_tobias.sh: run TOBIAS for ATAC seq data
+${SCRIPTNAME}: run CCBR TOBIAS workflow for ATAC seq data
 USAGE:
-  bash run_tobias.sh <MODE>  <path_to_workdir>
-Required Positional Argument:
-  MODE: [Type: Str] Valid options:
-    a) init <path_to_workdir> : initialize workdir
-    b) run <path_to_workdir>: run with slurm
-    c) reset <path_to_workdir> : DELETE workdir dir and re-init it
-    e) dryrun <path_to_workdir> : dry run snakemake to generate DAG
-    f) unlock <path_to_workdir> : unlock workdir if locked by snakemake
-    g) runlocal <path_to_workdir>: run without submitting to sbatch
+  bash ${SCRIPTNAME} -m/--runmode=<MODE> -w/--workdir=<path_to_workdir>
+Required Arguments:
+1.  RUNMODE: [Type: String] Valid options:
+    *) init : initialize workdir
+    *) run : run with slurm
+    *) reset : DELETE workdir dir and re-init it
+    *) dryrun : dry run snakemake to generate DAG
+    *) unlock : unlock workdir if locked by snakemake
+    *) runlocal : run without submitting to sbatch
+2.  WORKDIR: [Type: String]: Absolute or relative path to the output folder with write permissions.
 EOF
 }
+
+
+############################################################################
+
 
 function err() { cat <<< "
 #
@@ -58,17 +81,32 @@ function err() { cat <<< "
 #
 " && usage && exit 1 1>&2; }
 
+
+############################################################################
+
+
 function init() {
 
-if [ "$#" -eq "1" ]; then err "init needs an absolute path to the working dir"; fi
-if [ "$#" -gt "2" ]; then err "init takes only one more argument"; fi
-WORKDIR=$2
-x=$(echo $WORKDIR|awk '{print substr($1,1,1)}')
-if [ "$x" != "/" ]; then err "working dir should be supplied as an absolute path"; fi
-echo "Working Dir: $WORKDIR"
-if [ -d $WORKDIR ];then err "Folder $WORKDIR already exists!"; exit 1; fi
+# This function initializes the workdir by:
+# 1. creating the working dir
+# 2. copying essential files like config.yaml and samples.tsv into the workdir
+# 3. setting up logs and stats folders
+
+# create output folder
+if [ -d $WORKDIR ];then err "Folder $WORKDIR already exists!"; fi
 mkdir -p $WORKDIR
-sed -e "s/PIPELINE_HOME/${PIPELINE_HOME//\//\\/}/g" -e "s/WORKDIR/${WORKDIR//\//\\/}/g" ${PIPELINE_HOME}/config/config.yaml > $WORKDIR/config.yaml
+
+# copy essential files
+for f in $ESSENTIAL_FILES;do
+echo "Copying essential file: $f"
+fbn=$(basename $f)
+sed -e "s/PIPELINE_HOME/${PIPELINE_HOME//\//\\/}/g" -e "s/WORKDIR/${WORKDIR//\//\\/}/g" ${PIPELINE_HOME}/$f > $WORKDIR/$fbn
+done
+
+# copy essential folders
+for f in $ESSENTIAL_FOLDERS;do
+  rsync -az --progress $f $WORKDIR/
+done
 
 #create log and stats folders
 if [ ! -d $WORKDIR/logs ]; then mkdir -p $WORKDIR/logs;echo "Logs Dir: $WORKDIR/logs";fi
@@ -78,47 +116,78 @@ echo "Done Initializing $WORKDIR. You can now edit $WORKDIR/config.yaml"
 
 }
 
+
+############################################################################
+
+
 function runcheck(){
-  if [ "$#" -eq "1" ]; then err "absolute path to the working dir needed"; usage; exit 1; fi
-  if [ "$#" -gt "2" ]; then err "too many arguments"; usage; exit 1; fi
-  WORKDIR=$2
-  echo "Working Dir: $WORKDIR"
-  if [ ! -d $WORKDIR ];then err "Folder $WORKDIR does not exist!"; exit 1; fi
-  module load python/3.7
-  module load snakemake/5.24.1
-  SINGULARITY_BINDS="$SINGULARITY_BINDS -B ${PIPELINE_HOME}:${PIPELINE_HOME} -B ${WORKDIR}:${WORKDIR}"
+# Check "job-essential" files and load required modules
+
+  check_essential_files
+  module load $PYTHON_VERSION
+  module load $SNAKEMAKE_VERSION
+
 }
 
+
+############################################################################
+
+
 function dryrun() {
-  runcheck "$@"
+  runcheck
   run "--dry-run"
 }
 
+
+############################################################################
+
+
 function unlock() {
-  runcheck "$@"
+  runcheck
   run "--unlock"  
 }
 
+
+############################################################################
+
+
 function runlocal() {
-  runcheck "$@"
+  runcheck
+  set_singularity_binds
   if [ "$SLURM_JOB_ID" == "" ];then err "runlocal can only be done on an interactive node"; exit 1; fi
-  module load singularity
+  module load $SINGULARITY_VERSION
+  run "--dry-run" && \
+  echo "Dry-run was successful .... starting local execution" && \
   run "local"
 }
 
+
+############################################################################
+
+
 function runslurm() {
-  runcheck "$@"
+  runcheck
+  set_singularity_binds
+#define cluster resource json file
+# CLUSTERJSON=$(python <(curl -s https://raw.githubusercontent.com/CCBR/Tools/master/scripts/extract_value_from_yaml.py 2>/dev/null) -y ${WORKDIR}/config.yaml -k clusterjson)
+# if "clusterjson" key is absent from config.yaml then it defaults to the cluster.json in WORKDIR... to make sure this happens comment the above line and use the following
+  CLUSTERJSON=$(run "--dry-run"|grep "cluster.json"|awk '{print $NF}')
+  run "--dry-run" && \
+  echo "Dry-run was successful .... submitting to job-scheduler" && \
   run "slurm"
 }
 
-function preruncleanup() {
-  echo "Running..."
 
+############################################################################
+
+
+function preruncleanup() {
+  # Cleanup function to rename/move files related to older runs to prevent overwriting them.
+  echo "Running..."
+  # check initialization
+  check_essential_files 
   cd $WORKDIR
-  ## check if initialized
-  for f in config.yaml; do
-    if [ ! -f $WORKDIR/$f ]; then err "Error: '${f}' file not found in workdir ... initialize first!";usage && exit 1;fi
-  done
+
   ## Archive previous run files
   if [ -f ${WORKDIR}/snakemake.log ];then 
     modtime=$(stat ${WORKDIR}/snakemake.log |grep Modify|awk '{print $2,$3}'|awk -F"." '{print $1}'|sed "s/ //g"|sed "s/-//g"|sed "s/://g")
@@ -137,12 +206,17 @@ function preruncleanup() {
 
 }
 
-function postrun() {
-  bash ${PIPELINE_HOME}/scripts/gather_cluster_stats.sh ${WORKDIR}/snakemake.log > ${WORKDIR}/snakemake.log.HPC_summary.txt
-}
+
+############################################################################
+
 
 function run() {
-
+# RUN function
+# argument1 can be:
+# 1. local or
+# 2. dryrun or
+# 3. unlock or
+# 4. slurm
 
   if [ "$1" == "local" ];then
 
@@ -167,23 +241,26 @@ function run() {
     --configfile ${WORKDIR}/config.yaml 
   fi
 
-  postrun
-
   elif [ "$1" == "slurm" ];then
   
   preruncleanup
+
+#define partitions
+BUYINPARTITIONS=$(bash <(curl -s https://raw.githubusercontent.com/CCBR/Tools/master/Biowulf/get_buyin_partition_list.bash 2>/dev/null))
+PARTITIONS="norm"
+if [ $BUYINPARTITIONS ];then PARTITIONS="norm,$BUYINPARTITIONS";fi
 
   cat > ${WORKDIR}/submit_script.sbatch << EOF
 #!/bin/bash
 #SBATCH --job-name="tobias"
 #SBATCH --mem=10g
-#SBATCH --partition="ccr,norm"
+#SBATCH --partition="$PARTITIONS"
 #SBATCH --time=96:00:00
 #SBATCH --cpus-per-task=2
 
-module load python/3.7
-module load snakemake/5.24.1
-module load singularity
+module load $PYTHON_VERSION
+module load $SNAKEMAKE_VERSION
+module load $SINGULARITY_VERSION
 
 cd \$SLURM_SUBMIT_DIR
 
@@ -195,7 +272,7 @@ snakemake -s $SNAKEFILE \
 --printshellcmds \
 --latency-wait 120 \
 --configfile ${WORKDIR}/config.yaml \
---cluster-config ${PIPELINE_HOME}/config/cluster.json \
+--cluster-config $CLUSTERJSON \
 --cluster "sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} -p {cluster.partition} -t {cluster.time} --mem {cluster.mem} --job-name {cluster.name} --output {cluster.output} --error {cluster.error} --qos={cluster.qos}" \
 -j 500 \
 --rerun-incomplete \
@@ -210,7 +287,7 @@ if [ "\$?" -eq "0" ];then
   --configfile ${WORKDIR}/config.yaml 
 fi
 
-bash ${PIPELINE_HOME}/scripts/gather_cluster_stats.sh ${WORKDIR}/snakemake.log > ${WORKDIR}/snakemake.log.HPC_summary.txt
+bash <(curl https://raw.githubusercontent.com/CCBR/Tools/master/Biowulf/gather_cluster_stats_biowulf.sh 2>/dev/null) ${WORKDIR}/snakemake.log > ${WORKDIR}/snakemake.log.HPC_summary.txt
 
 EOF
 
@@ -218,52 +295,137 @@ EOF
 
   else
 
+# dryrun and unlock
+
 snakemake $1 -s $SNAKEFILE \
 --directory $WORKDIR \
---use-envmodules \
 --printshellcmds \
---latency-wait 120 \
---configfile ${WORKDIR}/config.yaml \
---cluster-config ${PIPELINE_HOME}/config/cluster.json \
---cluster "sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} -p {cluster.partition} -t {cluster.time} --mem {cluster.mem} --job-name {cluster.name} --output {cluster.output} --error {cluster.error}" \
 -j 500 \
---rerun-incomplete \
---keep-going \
---stats ${WORKDIR}/snakemake.stats
+--configfile ${WORKDIR}/config.yaml
 
   fi
 
 }
 
+
+############################################################################
+
+
 function reset() {
-if [ "$#" -eq "1" ]; then err "cleanup needs an absolute path to the existing working dir"; usage; fi
-if [ "$#" -gt "2" ]; then err "cleanup takes only one more argument"; usage; fi
-WORKDIR=$2
-echo "Working Dir: $WORKDIR"
-if [ ! -d $WORKDIR ];then err "Folder $WORKDIR does not exist!";fi
-echo "Deleting $WORKDIR"
-rm -rf $WORKDIR
-echo "Re-Initializing $WORKDIR"
-init "$@"
+# Delete the workdir and re-initialize it
+  echo "Working Dir: $WORKDIR"
+  if [ ! -d $WORKDIR ];then err "Folder $WORKDIR does not exist!";fi
+  echo "Deleting $WORKDIR"
+  rm -rf $WORKDIR
+  echo "Re-Initializing $WORKDIR"
+  init
 }
+
+
+############################################################################
+
+
+function check_essential_files() {
+
+# Checks if files essential to start running the pipeline exist in the workdir
+
+  if [ ! -d $WORKDIR ];then err "Folder $WORKDIR does not exist!"; fi
+  for f in $ESSENTIAL_FILES; do
+    fbn=$(basename $f)
+    if [ ! -f $WORKDIR/$fbn ]; then err "Error: '${fbn}' file not found in workdir ... initialize first!";fi
+  done
+
+}
+
+
+############################################################################
+
+
+function reconfig(){
+# Rebuild config file and replace the config.yaml in the WORKDIR
+# this is only for dev purposes when new key-value pairs are being added to the config file
+
+  check_essential_files
+  sed -e "s/PIPELINE_HOME/${PIPELINE_HOME//\//\\/}/g" -e "s/WORKDIR/${WORKDIR//\//\\/}/g" ${PIPELINE_HOME}/config/config.yaml > $WORKDIR/config.yaml
+  echo "$WORKDIR/config.yaml has been updated!"
+
+}
+
+
+############################################################################
+
+
+function set_singularity_binds(){
+# this functions tries find what folders to bind
+# biowulf specific
+  echo "$PIPELINE_HOME" > ${WORKDIR}/tmp1
+  echo "$WORKDIR" >> ${WORKDIR}/tmp1
+  grep -o '\/.*' <(cat ${WORKDIR}/config.yaml)|tr '\t' '\n'|grep -v ' \|\/\/'|sort|uniq >> ${WORKDIR}/tmp1
+  grep gpfs ${WORKDIR}/tmp1|awk -F'/' -v OFS='/' '{print $1,$2,$3,$4,$5}' |sort|uniq > ${WORKDIR}/tmp2
+  grep -v gpfs ${WORKDIR}/tmp1|awk -F'/' -v OFS='/' '{print $1,$2,$3}'|sort|uniq > ${WORKDIR}/tmp3
+  while read a;do readlink -f $a;done < ${WORKDIR}/tmp3 > ${WORKDIR}/tmp4
+  binds=$(cat ${WORKDIR}/tmp2 ${WORKDIR}/tmp3 ${WORKDIR}/tmp4|sort|uniq |tr '\n' ',')
+  rm -f ${WORKDIR}/tmp?
+  binds=$(echo $binds|awk '{print substr($1,1,length($1)-1)}')
+  SINGULARITY_BINDS="-B $EXTRA_SINGULARITY_BINDS,$binds"
+}
+
+
+############################################################################
+
+
+function printbinds(){
+  set_singularity_binds
+  echo $SINGULARITY_BINDS
+}
+
+
+############################################################################
 
 
 function main(){
 
   if [ $# -eq 0 ]; then usage; exit 1; fi
 
-  case $1 in
-    init) init "$@" && exit 0;;
-    dryrun) dryrun "$@" && exit 0;;
-    unlock) unlock "$@" && exit 0;;
-    run) runslurm "$@" && exit 0;;
-    runlocal) runlocal "$@" && exit 0;;
-    reset) reset "$@" && exit 0;;
-    -h | --help | help) usage && exit 0;;
-    -* | --*) err "Error: Failed to provide mode: <init|run>."; usage && exit 1;;
-    *) err "Error: Failed to provide mode: <init|run>. '${1}' is not supported."; usage && exit 1;;
+
+  for i in "$@"
+  do
+  case $i in
+      -m=*|--runmode=*)
+        RUNMODE="${i#*=}"
+      ;;
+      -w=*|--workdir=*)
+        WORKDIR="${i#*=}"
+      ;;
+      -h|--help)
+        usage && exit 0;;
+      *)
+        echo "\"$i\"" && err "Unknown argument!"    # unknown option
+      ;;
+  esac
+  done
+  WORKDIR=$(readlink -f "$WORKDIR")
+  echo "Working Dir: $WORKDIR"
+
+  case $RUNMODE in
+    init) init && exit 0;;
+    dag) dag && exit 0;;
+    dryrun) dryrun && exit 0;;
+    unlock) unlock && exit 0;;
+    run) runslurm && exit 0;;
+    runlocal) runlocal && exit 0;;
+    reset) reset && exit 0;;
+    dry) dryrun && exit 0;;                      # hidden option
+    local) runlocal && exit 0;;                  # hidden option
+    reconfig) reconfig && exit 0;;               # hidden option for debugging
+    printbinds) printbinds && exit 0;;           # hidden option
+    *) err "Unknown RUNMODE \"$RUNMODE\"";;
   esac
 }
+
+
+############################################################################
+
 
 main "$@"
 
