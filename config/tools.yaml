@@ -6,3 +6,9 @@ sambamba:
   version: "sambamba/0.8.0"
 ucsc:
   version: "ucsc/410"
+uropa:
+  version: "uropa/4.0.2"
+python:
+  version: "python/3.7"
+parallel:
+  version: "parallel/20210622"
