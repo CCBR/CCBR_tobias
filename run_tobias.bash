@@ -105,7 +105,7 @@ done
 
 # copy essential folders
 for f in $ESSENTIAL_FOLDERS;do
-  rsync -az --progress $f $WORKDIR/
+  rsync -az --progress ${PIPELINE_HOME}/$f $WORKDIR/
 done
 
 #create log and stats folders
