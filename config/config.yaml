@@ -3,12 +3,12 @@
 # The working dir... output will be in the results subfolder of the workdir
 workdir: "WORKDIR"
 # to use the workdir version of cluster.json comment out the following line
-clusterjson: "PIPELINE_HOME/config/cluster.json"
+# clusterjson: "PIPELINE_HOME/config/cluster.json"
 # define scripts/resource folders ... if you curated your own please add them here
 resourcesdir: "PIPELINE_HOME/resources" # defaults to PIPELINE_HOME/resources
 # scripts folder is copied over to the workdir from pipeline_home.
 # to use the workdir version of scripts comment out the following line
-scriptsdir: "PIPELINE_HOME/scripts"  # defaults to PIPELINE_HOME/scripts
+# scriptsdir: "PIPELINE_HOME/scripts"  # defaults to PIPELINE_HOME/scripts
 # preinstalled modules on biowulf that will be used
 # to use the workdir version of tools.yaml comment out the following line
 tools: "PIPELINE_HOME/config/tools.yaml"
@@ -44,7 +44,7 @@ genome: "mm10"
 mm10:
   reffa: "/data/CCBR_Pipeliner/db/PipeDB/Indices/mm10_basic/mm10_basic.fa"
   gtf: "/data/CCBR_Pipeliner/db/PipeDB/Indices/GTFs/mm10/gencode.vM21.annotation.gtf"
-hg39:
+hg38:
   reffa: "/data/CCBR_Pipeliner/db/PipeDB/Indices/hg38_basic/hg38_basic.fa"
   gtf: "/data/CCBR_Pipeliner/db/PipeDB/Indices/GTFs/hg38/gencode.v30.annotation.gtf"
 
