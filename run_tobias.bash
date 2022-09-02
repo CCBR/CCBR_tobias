@@ -137,6 +137,15 @@ function runcheck(){
 
 function dryrun() {
   runcheck
+  if [ -f ${WORKDIR}/dryrun.log ]; then
+    modtime=$(stat ${WORKDIR}/dryrun.log |grep Modify|awk '{print $2,$3}'|awk -F"." '{print $1}'|sed "s/ //g"|sed "s/-//g"|sed "s/://g")
+    mv ${WORKDIR}/dryrun.log ${WORKDIR}/logs/dryrun.${modtime}.log
+    if [ -f ${WORKDIR}/dryrun_git_commit.txt ];then
+      mv ${WORKDIR}/dryrun_git_commit.txt ${WORKDIR}/logs/dryrun_git_commit.${modtime}.txt
+    fi
+  fi
+  run "--dry-run" > ${WORKDIR}/dryrun.log && \
+  cat ${WORKDIR}/dryrun.log && \
   run "--dry-run"
 }
 
@@ -160,6 +169,7 @@ function runlocal() {
   module load $SINGULARITY_VERSION
   run "--dry-run" && \
   echo "Dry-run was successful .... starting local execution" && \
+  echo "Git Commit/Tag: $GIT_COMMIT_TAG" > ${WORKDIR}/run_git_commit.txt && \
   run "local"
 }
 
@@ -176,6 +186,7 @@ function runslurm() {
   CLUSTERJSON=$(run "--dry-run"|grep "cluster.json"|awk '{print $NF}')
   run "--dry-run" && \
   echo "Dry-run was successful .... submitting to job-scheduler" && \
+  echo "Git Commit/Tag: $GIT_COMMIT_TAG" > ${WORKDIR}/run_git_commit.txt && \
   run "slurm"
 }
 
@@ -193,12 +204,15 @@ function preruncleanup() {
   ## Archive previous run files
   if [ -f ${WORKDIR}/snakemake.log ];then 
     modtime=$(stat ${WORKDIR}/snakemake.log |grep Modify|awk '{print $2,$3}'|awk -F"." '{print $1}'|sed "s/ //g"|sed "s/-//g"|sed "s/://g")
-    mv ${WORKDIR}/snakemake.log ${WORKDIR}/stats/snakemake.${modtime}.log
+    mv ${WORKDIR}/snakemake.log ${WORKDIR}/logs/snakemake.${modtime}.log
     if [ -f ${WORKDIR}/snakemake.log.HPC_summary.txt ];then 
       mv ${WORKDIR}/snakemake.log.HPC_summary.txt ${WORKDIR}/stats/snakemake.${modtime}.log.HPC_summary.txt
     fi
     if [ -f ${WORKDIR}/snakemake.stats ];then 
       mv ${WORKDIR}/snakemake.stats ${WORKDIR}/stats/snakemake.${modtime}.stats
+    fi
+    if [ -f ${WORKDIR}/run_git_commit.txt ];then
+      mv ${WORKDIR}/run_git_commit.txt ${WORKDIR}/logs/run_git_commit.${modtime}.txt
     fi
   fi
   nslurmouts=$(find ${WORKDIR} -maxdepth 1 -name "slurm-*.out" |wc -l)
