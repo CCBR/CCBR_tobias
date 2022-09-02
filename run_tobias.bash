@@ -11,7 +11,9 @@
 
 PYTHON_VERSION="python/3.7"
 SNAKEMAKE_VERSION="snakemake"
-SINGULARITY_VERSION="singularity/3.7.4"
+#SINGULARITY_VERSION="singularity/3.7.4"
+#SINGULARITY_VERSION="singularity/3.8.5"
+SINGULARITY_VERSION="singularity"
 
 SCRIPTNAME="$0"
 SCRIPTBASENAME=$(readlink -f $(basename $0))
