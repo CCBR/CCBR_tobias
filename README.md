@@ -131,6 +131,13 @@ More more details see https://github.com/loosolab/TOBIAS/wiki/BINDetect
 
 **<u>Caution</u>** This folder has a large digital footprint. Approximately, each contrast produces files amounting to about 40-60 GB. Hence, only run those contrasts that are interesting. DO NOT RUN ALL JUST BECAUSE YOU CAN!
 
+This folder also contains:
+
+* bindetect_results.txt
+* bindetect_figures.pdf
+
+which are the key results for this contrast as a table and as plots.
+
 #### overview_{contrast}
 
 All "bound" bed for all the TF motifs considered are concatenated together to be reported here as 2 sorted and indexed bed files. As these are indexed they can be easily loaded in a IGV session for visual inspection.

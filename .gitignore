@@ -3,6 +3,7 @@
 !.editorconfig
 !.gitignore
 !.gitattributes
+**/.DS_Store
 site/
 test_jaspar.txt
 test_pfm.txt
