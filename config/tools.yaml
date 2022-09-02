@@ -11,4 +11,4 @@ uropa:
 python:
   version: "python/3.7"
 parallel:
-  version: "parallel/20210622"
+  version: "parallel/current"
