@@ -287,6 +287,7 @@ TOBIAS BINDetect \
     --cond-names $c1 $c2 \
     --outdir $outdir \
     {params.bindetect_extra_params}
+sleep 600
 """
 
 #######################################################
