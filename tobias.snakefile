@@ -430,11 +430,14 @@ rule plot_heatmaps_aggregates:
     message: 
         "Generating plots"
     shell:"""
+set -exo pipefail
+
 for i in {input};
 do 
 echo "bash $i"
 done > {params.workdir}/do_plots
-parallel -j {threads} < {params.workdir}/do_plots
+#parallel -j {threads} < {params.workdir}/do_plots
+bash {params.workdir}/do_plots
 
 # cleanup
 # while read a b;do rm -f $b;done < {params.workdir}/do_plots
