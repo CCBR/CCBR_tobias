@@ -245,6 +245,7 @@ function run() {
   --singularity-args "$SINGULARITY_BINDS" \
   --use-envmodules \
   --latency-wait 120 \
+  --rerun-incomplete \
   --configfile ${WORKDIR}/config.yaml \
   --cores all \
   --stats ${WORKDIR}/snakemake.stats \
@@ -316,6 +317,7 @@ EOF
 snakemake $1 -s $SNAKEFILE \
 --directory $WORKDIR \
 --printshellcmds \
+--rerun-incomplete \
 -j 500 \
 --configfile ${WORKDIR}/config.yaml
 
