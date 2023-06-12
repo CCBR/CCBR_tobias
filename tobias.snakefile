@@ -316,14 +316,15 @@ rule bgzip_beds:
         tsv=join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv")
     params:
         workdir = WORKDIR,
+        contrast = "{contrast}",
         script = join(SCRIPTSDIR,"_bgzip_all_beds.bash")
     threads: getthreads("gzip_beds")
     envmodules: TOOLS["ucsc"]["version"], TOOLS["samtools"]["version"], TOOLS["parallel"]["version"]
     shell:"""
 cd {params.workdir}
-awk '{{print $2}}' {input} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip
-parallel -j {threads} < do_bgzip
-# rm -f do_bgzip
+awk '{{print $2}}' {input} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip_{params.contrast}
+parallel -j {threads} < do_bgzip_{params.contrast}
+# rm -f do_bgzip_{params.contrast}
 cp {input} {output}
 """
 
