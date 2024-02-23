@@ -9,10 +9,8 @@
 # ## clone the pipeline to a folder
 # ## git clone https://github.com/loosolab/TOBIAS.git
 
-PYTHON_VERSION="python/3.7"
-SNAKEMAKE_VERSION="snakemake"
-#SINGULARITY_VERSION="singularity/3.7.4"
-#SINGULARITY_VERSION="singularity/3.8.5"
+PYTHON_VERSION="python/3.10"
+SNAKEMAKE_VERSION="snakemake/7.32.3"
 SINGULARITY_VERSION="singularity"
 
 SCRIPTNAME="$0"
