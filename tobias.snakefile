@@ -10,7 +10,7 @@ import glob
 #######################################################
 # INCLUDE OTHER .smk FILES
 #######################################################
-include: join("rules/init.smk")
+include: 'rules/init.smk'
 #######################################################
 
 #######################################################
@@ -87,20 +87,9 @@ rule all:
         # expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
         expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
         expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
-
+        # network
+        expand("{WORKDIR}/network/{contrast}/{GENOME}.txt", WORKDIR=WORKDIR, contrast=CONTRASTS, GENOME=GENOME)
 #######################################################
-
-
-
-
-
-
-
-
-
-
-
-
 
 #######################################################
 
@@ -290,6 +279,33 @@ TOBIAS BINDetect \
 sleep 600
 """
 
+rule map_motifs_to_genes:
+    input:
+        gtf=GTF,
+        pfm=config["pfm"]
+    output:
+        txt=f"{WORKDIR}/motif2gene/{GENOME}.motif2gene_mapping.txt"
+    container: CONTAINERS["base"]
+    script:
+        "scripts/motif2gene_mapping.py"
+
+rule create_network:
+    input:
+        origin=rules.map_motifs_to_genes.output.txt,
+        bindetect=rules.bindetect.output.pdf # actually using annotated TFBS files, but checkpoints are cumbersome to deal with
+    output:
+        txt=f"{WORKDIR}/network/{{contrast}}/{GENOME}.txt"
+    container: CONTAINERS["tobias"]
+    shell:
+        """
+        TFBS_LIST="$(dirname {input.bindetect})/*/beds/*_bound.bed.gz"
+        touch {output.txt}
+        TOBIAS CreateNetwork \
+            --TFBS $TFBS_LIST \
+            --origin {input.origin} \
+            --outdir $(dirname {output.txt})
+        """
+
 #######################################################
 
 rule create_cont_cond_tf_join_filelist:
@@ -311,7 +327,8 @@ rule create_cont_cond_tf_join_filelist:
 
 rule bgzip_beds:
     input:
-        rules.create_cont_cond_tf_join_filelist.output.tsv
+        rules.create_cont_cond_tf_join_filelist.output.tsv,
+        rules.create_network.output # run create_network first
     output:
         tsv=join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv")
     params:
