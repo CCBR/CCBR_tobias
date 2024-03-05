@@ -1,8 +1,11 @@
-import sys
 #!/usr/bin/env python
 """
 Map Jaspar motifs to genes
 """
+
+import sys
+
+
 def main(gtf_file, motifs_file, output_file):
     protein2gene=dict()
     with open(gtf_file,'r') as infile:
@@ -28,6 +31,7 @@ def main(gtf_file, motifs_file, output_file):
                 umotif = "\"" + motif.upper() + "\""
                 if not umotif in protein2gene: continue
                 outfile.write("\t".join(list(map(lambda x:x.strip("\""),[motif,protein2gene[umotif]]))))
+
 
 if __name__ == '__main__':
     if "snakemake" in locals() or "snakemake" in globals():
