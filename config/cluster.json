@@ -1,51 +1,57 @@
 {
-    "__default__": {
-        "gres": "lscratch:256",
-        "mem": "20g",
-        "partition": "norm","qos": "global",
-        "threads": "2",
-        "time": "4:00:00",
-        "name"      : "{rule}.{wildcards}",
-        "output"    : "logs/${{SLURM_JOBID}}.%j.{rule}.{wildcards}.out",
-        "error"     : "logs/${{SLURM_JOBID}}.%j.{rule}.{wildcards}.err"
-    },
-    "coverage_bw": {
-        "mem": "200g",
-        "threads": "4",
-        "time": "48:00:00"
-    },
-    "condition_bam": {
-        "mem": "200g",
-        "threads": "16",
-        "time": "48:00:00"
-    },
-    "atacorrect": {
-        "mem": "500g",
-        "threads": "72",
-        "time": "2-00:00:00",
-        "partition": "largemem"
-    },
-    "gzip_beds": {
-        "mem": "100g",
-        "threads": "56",
-        "time": "24:00:00"
-    },
-    "footprinting": {
-        "mem": "200g",
-        "threads": "56",
-        "time": "48:00:00"
-    },
-    "bindetect": {
-        "mem": "200g",
-        "threads": "56",
-        "time": "96:00:00"
-    },
-    "join_bound":{
-        "time": "96:00:00"
-    },
-    "plot_heatmaps_aggregates": {
-	"mem": "200g",
-        "threads": "4",
-	"time": "12:00:00"
-    }
+  "__default__": {
+    "gres": "lscratch:256",
+    "mem": "20g",
+    "partition": "norm",
+    "qos": "global",
+    "threads": "2",
+    "time": "4:00:00",
+    "name": "{rule}.{wildcards}",
+    "output": "logs/${{SLURM_JOBID}}.%j.{rule}.{wildcards}.out",
+    "error": "logs/${{SLURM_JOBID}}.%j.{rule}.{wildcards}.err"
+  },
+  "coverage_bw": {
+    "mem": "200g",
+    "threads": "4",
+    "time": "48:00:00"
+  },
+  "condition_bam": {
+    "mem": "200g",
+    "threads": "16",
+    "time": "48:00:00"
+  },
+  "atacorrect": {
+    "mem": "500g",
+    "threads": "72",
+    "time": "2-00:00:00",
+    "partition": "largemem"
+  },
+  "gzip_beds": {
+    "mem": "100g",
+    "threads": "56",
+    "time": "24:00:00"
+  },
+  "footprinting": {
+    "mem": "200g",
+    "threads": "56",
+    "time": "48:00:00"
+  },
+  "bindetect": {
+    "mem": "200g",
+    "threads": "56",
+    "time": "96:00:00"
+  },
+  "create_network": {
+    "mem": "200g",
+    "threads": "1",
+    "time": "96:00:00"
+  },
+  "join_bound": {
+    "time": "96:00:00"
+  },
+  "plot_heatmaps_aggregates": {
+    "mem": "200g",
+    "threads": "4",
+    "time": "12:00:00"
+  }
 }
