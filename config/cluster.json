@@ -42,7 +42,7 @@
     "time": "96:00:00"
   },
   "create_network": {
-    "mem": "200g",
+    "mem": "100g",
     "threads": "1",
     "time": "96:00:00"
   },
