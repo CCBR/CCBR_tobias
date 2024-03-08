@@ -30,7 +30,7 @@ def main(gtf_file, motifs_file, output_file):
                 motif = l.strip().split()[-1]
                 umotif = "\"" + motif.upper() + "\""
                 if not umotif in protein2gene: continue
-                outfile.write("\t".join(list(map(lambda x:x.strip("\""),[motif,protein2gene[umotif]]))) + '\n')
+                outfile.write("\t".join(list(map(lambda x:x.strip("\""),[motif, protein2gene[umotif]]))) + '\n')
 
 
 if __name__ == '__main__':

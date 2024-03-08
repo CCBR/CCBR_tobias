@@ -58,14 +58,13 @@ def get_bound_bed_list_per_contrast_per_condition_per_TF(wildcards) :
 #######################################################
 
 # localrules: all, plot_heatmaps_aggregates
-localrules: all, plot_heatmaps_aggregates_init
+localrules: all, plot_heatmaps_aggregates_init, strip_gene_version_numbers, map_motifs_to_genes
 
 #######################################################
 
 #######################################################
 # RULE ALL
 #######################################################
-
 rule all:
     input:
         # merge replicate BAMs to per-condition BAM
@@ -88,10 +87,23 @@ rule all:
         #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
         #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
         # network
-        expand("{WORKDIR}/network/{contrast}/edges.txt", WORKDIR=WORKDIR, contrast=CONTRASTS, GENOME=GENOME)
+        [f"{WORKDIR}/network/{contrast}/{condition}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items() for condition in conditions_list],
 #######################################################
 
 #######################################################
+
+rule tobias_download_data:
+    """ 
+    Download example data from Tobias
+    """
+    output:
+        directory('data-tobias-2020')
+    container: CONTAINERS["tobias"]
+    shell:
+        """
+        TOBIAS DownloadData --bucket data-tobias-2020
+        """
+
 
 rule condition_bam:
 # """ 
@@ -279,10 +291,32 @@ TOBIAS BINDetect \
 sleep 600
 """
 
+rule strip_gene_version_numbers:
+    """
+    Strip version numbers and combine into one bed file.
+    Annotated bed files from uropa contain version numbers,
+    but gene names in map_motifs_to_genes do not.
+    """
+    input:
+        bindetect=rules.bindetect.output.pdf, # actually using annotated TFBS files, but checkpoints are cumbersome to deal with
+        py=f"{SCRIPTSDIR}/strip_gene_version_numbers.py"
+    output:
+        bed=f"{WORKDIR}/TFBS_{{contrast}}_combined/{{condition}}.bed",
+        tmp=temp(f"{WORKDIR}/TFBS_{{contrast}}_combined/{{condition}}.bed.tmp")
+    container: CONTAINERS["base"]
+    shell:
+        """
+        bed_files=$(dirname {input.bindetect})/*/beds/*{wildcards.condition}_bound.bed
+        cat $bed_files > {output.tmp}
+        python {SCRIPTSDIR}/strip_gene_version_numbers.py {output.tmp} {output.bed}
+        """
+
+
 rule map_motifs_to_genes:
     input:
         gtf=GTF,
-        pfm=config["pfm"]
+        pfm=config["pfm"],
+        py=f"{SCRIPTSDIR}/motif2gene_mapping.py"
     output:
         txt=f"{WORKDIR}/motif2gene/{GENOME}.motif2gene_mapping.txt"
     container: CONTAINERS["base"]
@@ -292,15 +326,15 @@ rule map_motifs_to_genes:
 rule create_network:
     input:
         origin=rules.map_motifs_to_genes.output.txt,
-        bindetect=rules.bindetect.output.pdf # actually using annotated TFBS files, but checkpoints are cumbersome to deal with
+        bed=rules.strip_gene_version_numbers.output.bed
     output:
-        adjacency=f"{WORKDIR}/network/{{contrast}}/adjacency.txt",
-        edges=f"{WORKDIR}/network/{{contrast}}/edges.txt"
+        adjacency=f"{WORKDIR}/network/{{contrast}}/{{condition}}/adjacency.txt",
+        edges=f"{WORKDIR}/network/{{contrast}}/{{condition}}/edges.txt"
     container: CONTAINERS["tobias"]
     shell:
         """
         TOBIAS CreateNetwork \
-            --TFBS $(dirname {input.bindetect})/*/beds/*_bound.bed \
+            --TFBS {input.bed} \
             --origin {input.origin} \
             --outdir $(dirname {output.edges})
         """
@@ -460,5 +494,3 @@ bash {params.workdir}/do_plots
 rm -f {params.workdir}/do_plots
 
 """
-
-
