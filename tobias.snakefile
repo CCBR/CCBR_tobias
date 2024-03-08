@@ -81,14 +81,14 @@ rule all:
         expand(join(WORKDIR, "footprinting", "{condition}_footprints.bw"), condition=CONDITION_IDS),
         # run Bindetect for each contrast
         expand(join(WORKDIR, "TFBS_{contrast}", "bindetect_figures.pdf"),contrast=CONTRASTS),
-        expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
-        expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
+        #expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
+        #expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
         # plots
         # expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
-        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
-        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
+        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
+        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
         # network
-        expand("{WORKDIR}/network/{contrast}/{GENOME}.txt", WORKDIR=WORKDIR, contrast=CONTRASTS, GENOME=GENOME)
+        expand("{WORKDIR}/network/{contrast}/edges.txt", WORKDIR=WORKDIR, contrast=CONTRASTS, GENOME=GENOME)
 #######################################################
 
 #######################################################
@@ -294,16 +294,15 @@ rule create_network:
         origin=rules.map_motifs_to_genes.output.txt,
         bindetect=rules.bindetect.output.pdf # actually using annotated TFBS files, but checkpoints are cumbersome to deal with
     output:
-        txt=f"{WORKDIR}/network/{{contrast}}/{GENOME}.txt"
+        adjacency=f"{WORKDIR}/network/{{contrast}}/adjacency.txt",
+        edges=f"{WORKDIR}/network/{{contrast}}/edges.txt"
     container: CONTAINERS["tobias"]
     shell:
         """
-        TFBS_LIST="$(dirname {input.bindetect})/*/beds/*_bound.bed.gz"
-        touch {output.txt}
         TOBIAS CreateNetwork \
-            --TFBS $TFBS_LIST \
+            --TFBS $(dirname {input.bindetect})/*/beds/*_bound.bed \
             --origin {input.origin} \
-            --outdir $(dirname {output.txt})
+            --outdir $(dirname {output.edges})
         """
 
 #######################################################
