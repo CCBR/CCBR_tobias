@@ -58,7 +58,7 @@ def get_bound_bed_list_per_contrast_per_condition_per_TF(wildcards) :
 #######################################################
 
 # localrules: all, plot_heatmaps_aggregates
-localrules: all, plot_heatmaps_aggregates_init, strip_gene_version_numbers, map_motifs_to_genes
+localrules: all, plot_heatmaps_aggregates_init, reformat_annotated_bed, map_motifs_to_genes
 
 #######################################################
 
@@ -291,24 +291,24 @@ TOBIAS BINDetect \
 sleep 600
 """
 
-rule strip_gene_version_numbers:
+rule reformat_annotated_bed:
     """
-    Strip version numbers and combine into one bed file.
+    Strip ensembl gene version numbers, shorten motif IDs, and combine into one bed file.
     Annotated bed files from uropa contain version numbers,
     but gene names in map_motifs_to_genes do not.
     """
     input:
         bindetect=rules.bindetect.output.pdf, # actually using annotated TFBS files, but checkpoints are cumbersome to deal with
-        py=f"{SCRIPTSDIR}/strip_gene_version_numbers.py"
+        py=f"{SCRIPTSDIR}/reformat_annotated_bed.py"
     output:
-        bed=f"{WORKDIR}/TFBS_{{contrast}}_combined/{{condition}}.bed",
-        tmp=temp(f"{WORKDIR}/TFBS_{{contrast}}_combined/{{condition}}.bed.tmp")
+        bed=f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed",
+        tmp=temp(f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed.tmp")
     container: CONTAINERS["base"]
     shell:
         """
         bed_files=$(dirname {input.bindetect})/*/beds/*{wildcards.condition}_bound.bed
         cat $bed_files > {output.tmp}
-        python {SCRIPTSDIR}/strip_gene_version_numbers.py {output.tmp} {output.bed}
+        python {SCRIPTSDIR}/reformat_annotated_bed.py {output.tmp} {output.bed}
         """
 
 
@@ -326,7 +326,7 @@ rule map_motifs_to_genes:
 rule create_network:
     input:
         origin=rules.map_motifs_to_genes.output.txt,
-        bed=rules.strip_gene_version_numbers.output.bed
+        bed=rules.reformat_annotated_bed.output.bed
     output:
         adjacency=f"{WORKDIR}/network/{{contrast}}/{{condition}}/adjacency.txt",
         edges=f"{WORKDIR}/network/{{contrast}}/{{condition}}/edges.txt"

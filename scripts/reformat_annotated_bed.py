@@ -8,11 +8,13 @@ import sys
 
 def main(input_filename, output_filename):
     gene_name_index = 22
+    motif_name_index = 3
     with open(output_filename, 'w') as outfile:
         with open(input_filename, 'r') as infile:
             for line in infile:
                 line_split = line.split('\t')
-                line_split[gene_name_index] = gene_name_index.split('.')[0]
+                line_split[motif_name_index] = line_split[motif_name_index].split('_')[0]
+                line_split[gene_name_index] = line_split[gene_name_index].split('.')[0]
                 line_joined = '\t'.join(line_split)
                 outfile.write(line_joined + '\n')
 
