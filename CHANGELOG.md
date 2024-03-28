@@ -4,6 +4,6 @@
 - New feature: run `TOBIAS CreateNetwork` to identify TF-TF regulatory networks. (#8, @kelly-sovacool)
 - Add hg19 to the config file for biowulf users. (#8, @kelly-sovacool)
 
-# CCBR_tobias 0.3.0
+# CCBR_tobias 0.2.0
 
-TODO @kopardev
+Release notes were not written for this version or prior.
