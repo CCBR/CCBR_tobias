@@ -18,6 +18,7 @@ uropabaseyaml: "PIPELINE_HOME/config/uropa_base_config.yaml"
 
 containers:
   tobias: "docker://nciccbr/ccbr_tobias:v2"
+  base: "docker://nciccbr/ccbr_ubuntu_base_20.04:v6"
 
 # samples are entered in the following format:
 # data:
@@ -47,9 +48,15 @@ mm10:
 hg38:
   reffa: "/data/CCBR_Pipeliner/db/PipeDB/Indices/hg38_basic/hg38_basic.fa"
   gtf: "/data/CCBR_Pipeliner/db/PipeDB/Indices/GTFs/hg38/gencode.v30.annotation.gtf"
+hg19:
+  reffa: "/data/CCBR_Pipeliner/db/PipeDB/Indices/hg19_basic/hg19.copy.fa"
+  gtf: "/data/CCBR_Pipeliner/db/PipeDB/Indices/GTFs/hg19/gencode.v19.annotation.gtf"
 
 # blacklist BED file
 blacklist: ""
+
+# choose PFMs to use for motif to gene mapping prior to creating the TF binding network
+pfm: "PIPELINE_HOME/resources/JASPAR2024_CORE_non-redundant_pfms_jaspar.txt"
 
 # choose the motifs database to use
 # motifs: "PIPELINE_HOME/resources/HOCOMOCOv11_HUMAN_core_motifs.txt"

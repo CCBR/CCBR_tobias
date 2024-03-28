@@ -142,7 +142,7 @@ which are the key results for this contrast as a table and as plots.
 
 All "bound" bed for all the TF motifs considered are concatenated together to be reported here as 2 sorted and indexed bed files. As these are indexed they can be easily loaded in a IGV session for visual inspection.
 
+#### network
 
-
-
-
+TF-TF binding networks are created with [`TOBIAS CreateNetwork`](https://github.com/loosolab/TOBIAS/wiki/CreateNetwork) for the first condition in each contrast.
+An adjacency matrix and a list of edges are reported individually for each TF motif and summarized overall for each network.
