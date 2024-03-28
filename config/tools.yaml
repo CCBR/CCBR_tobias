@@ -3,12 +3,12 @@ bedtools:
 samtools:
   version: "samtools/1.9"
 sambamba:
-  version: "sambamba/0.8.0"
+  version: "sambamba/0.8.2"
 ucsc:
-  version: "ucsc/410"
+  version: "ucsc/457"
 uropa:
   version: "uropa/4.0.2"
 python:
-  version: "python/3.7"
+  version: "python/3.8"
 parallel:
   version: "parallel/current"
