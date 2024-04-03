@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Map Jaspar motifs to genes
+Reformat annotated bed file
 """
 
 import sys
