@@ -1,4 +1,4 @@
-# CCBR_tobias development version
+# CCBR_tobias 0.3.0
 
 - Update Biowulf module versions in driver script and snakemake config. (#4, @kelly-sovacool)
 - New feature: run `TOBIAS CreateNetwork` to identify TF-TF regulatory networks. (#8, @kelly-sovacool)
