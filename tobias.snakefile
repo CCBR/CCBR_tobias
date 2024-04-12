@@ -10,7 +10,7 @@ import glob
 #######################################################
 # INCLUDE OTHER .smk FILES
 #######################################################
-include: join("rules/init.smk")
+include: 'rules/init.smk'
 #######################################################
 
 #######################################################
@@ -58,14 +58,13 @@ def get_bound_bed_list_per_contrast_per_condition_per_TF(wildcards) :
 #######################################################
 
 # localrules: all, plot_heatmaps_aggregates
-localrules: all, plot_heatmaps_aggregates_init
+localrules: all, plot_heatmaps_aggregates_init, reformat_annotated_bed, map_motifs_to_genes
 
 #######################################################
 
 #######################################################
 # RULE ALL
 #######################################################
-
 rule all:
     input:
         # merge replicate BAMs to per-condition BAM
@@ -84,25 +83,28 @@ rule all:
         expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
         expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
         # plots
-        # expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
+        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
         expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
         expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
+        # network
+        # only needed for first condition in each contrast
+        [f"{WORKDIR}/network/{contrast}/{conditions_list[0]}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items()],
+#######################################################
 
 #######################################################
 
+rule tobias_download_data:
+    """ 
+    Download example data from Tobias
+    """
+    output:
+        directory('data-tobias-2020')
+    container: CONTAINERS["tobias"]
+    shell:
+        """
+        TOBIAS DownloadData --bucket data-tobias-2020
+        """
 
-
-
-
-
-
-
-
-
-
-
-
-#######################################################
 
 rule condition_bam:
 # """ 
@@ -290,6 +292,54 @@ TOBIAS BINDetect \
 sleep 600
 """
 
+rule reformat_annotated_bed:
+    """
+    Strip ensembl gene version numbers, shorten motif IDs, and combine into one bed file.
+    Annotated bed files from uropa contain version numbers,
+    but gene names in map_motifs_to_genes do not.
+    """
+    input:
+        bindetect=rules.bindetect.output.pdf, # actually using annotated TFBS files, but checkpoints are cumbersome to deal with
+        py=f"{SCRIPTSDIR}/reformat_annotated_bed.py"
+    output:
+        bed=f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed",
+        tmp=temp(f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed.tmp")
+    container: CONTAINERS["base"]
+    shell:
+        """
+        bed_files=$(dirname {input.bindetect})/*/beds/*{wildcards.condition}_bound.bed
+        cat $bed_files > {output.tmp}
+        python {SCRIPTSDIR}/reformat_annotated_bed.py {output.tmp} {output.bed}
+        """
+
+
+rule map_motifs_to_genes:
+    input:
+        gtf=GTF,
+        pfm=config["pfm"],
+        py=f"{SCRIPTSDIR}/motif2gene_mapping.py"
+    output:
+        txt=f"{WORKDIR}/motif2gene/{GENOME}.motif2gene_mapping.txt"
+    container: CONTAINERS["base"]
+    script:
+        "scripts/motif2gene_mapping.py"
+
+rule create_network:
+    input:
+        origin=rules.map_motifs_to_genes.output.txt,
+        bed=rules.reformat_annotated_bed.output.bed
+    output:
+        adjacency=f"{WORKDIR}/network/{{contrast}}/{{condition}}/adjacency.txt",
+        edges=f"{WORKDIR}/network/{{contrast}}/{{condition}}/edges.txt"
+    container: CONTAINERS["tobias"]
+    shell:
+        """
+        TOBIAS CreateNetwork \
+            --TFBS {input.bed} \
+            --origin {input.origin} \
+            --outdir $(dirname {output.edges})
+        """
+
 #######################################################
 
 rule create_cont_cond_tf_join_filelist:
@@ -311,7 +361,8 @@ rule create_cont_cond_tf_join_filelist:
 
 rule bgzip_beds:
     input:
-        rules.create_cont_cond_tf_join_filelist.output.tsv
+        rules.create_cont_cond_tf_join_filelist.output.tsv,
+        rules.create_network.output # run create_network first
     output:
         tsv=join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv")
     params:
@@ -444,5 +495,3 @@ bash {params.workdir}/do_plots
 rm -f {params.workdir}/do_plots
 
 """
-
-
