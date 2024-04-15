@@ -362,7 +362,7 @@ rule create_cont_cond_tf_join_filelist:
 rule bgzip_beds:
     input:
         rules.create_cont_cond_tf_join_filelist.output.tsv,
-        rules.create_network.output # run create_network first
+        [f"{WORKDIR}/network/{contrast}/{conditions_list[0]}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items()] # run create_network first
     output:
         tsv=join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv")
     params:
