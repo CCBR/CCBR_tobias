@@ -100,8 +100,7 @@ rule tobias_download_data:
     output:
         directory('data-tobias-2020')
     container: CONTAINERS["tobias"]
-    shell:
-        """
+    shell: """
         TOBIAS DownloadData --bucket data-tobias-2020
         """
 
@@ -123,18 +122,18 @@ rule condition_bam:
         outdir=join(WORKDIR,"bams"),
         mem=getmemG("condition_bam"),
         condition="{condition}",
-    shell:"""
-if [ -w "/lscratch/${{SLURM_JOB_ID}}" ];then tmpdir="/lscratch/${{SLURM_JOB_ID}}";else tmpdir="/dev/shm";fi
-sorted_bams=""
-for bam in {input}
-do
-bn=$(basename $bam)
-sambamba sort --memory-limit={params.mem} --tmpdir=${{tmpdir}} --nthreads={threads} --out=/lscratch/${{SLURM_JOBID}}/${{bn%.*}}.sorted.bam $bam
-sorted_bams="$sorted_bams ${{tmpdir}}/${{bn%.*}}.sorted.bam"
-done
-sambamba merge --nthreads={threads} {output.bam} $sorted_bams
-rm -rf ${{tmpdir}}/*
-"""
+    shell: """
+        if [ -w "/lscratch/${{SLURM_JOB_ID}}" ]; then tmpdir="/lscratch/${{SLURM_JOB_ID}}"; else tmpdir="/dev/shm"; fi
+        sorted_bams=""
+        for bam in {input}
+        do
+        bn=$(basename $bam)
+        sambamba sort --memory-limit={params.mem} --tmpdir=${{tmpdir}} --nthreads={threads} --out=/lscratch/${{SLURM_JOBID}}/${{bn%.*}}.sorted.bam $bam
+        sorted_bams="$sorted_bams ${{tmpdir}}/${{bn%.*}}.sorted.bam"
+        done
+        sambamba merge --nthreads={threads} {output.bam} $sorted_bams
+        rm -rf ${{tmpdir}}/*
+        """
 
 #######################################################
 
@@ -152,14 +151,14 @@ rule coverage_bw:
         "Running {rule} for condition: {wildcards.condition} ({input.bam})"
     threads: getthreads("coverage_bw")
     envmodules: TOOLS["bedtools"]["version"],TOOLS["samtools"]["version"], TOOLS["ucsc"]["version"]
-    shell:"""
-if [ -w "/lscratch/${{SLURM_JOB_ID}}" ];then tmpdir="/lscratch/${{SLURM_JOB_ID}}";else tmpdir="/dev/shm";fi
-bedtools genomecov -ibam {input.bam} -bg >  ${{tmpdir}}/{params.condition}.bg
-bedSort ${{tmpdir}}/{params.condition}.bg ${{tmpdir}}/{params.condition}.bg
-samtools view -H {input.bam}|grep '^@SQ'|cut -f2,3|sed 's/SN:\|LN://g' > ${{tmpdir}}/{params.condition}.chrom.sizes
-bedGraphToBigWig ${{tmpdir}}/{params.condition}.bg ${{tmpdir}}/{params.condition}.chrom.sizes {output.coveragebw}
-rm -rf ${{tmpdir}}/*
-"""
+    shell: """
+        if [ -w "/lscratch/${{SLURM_JOB_ID}}" ];then tmpdir="/lscratch/${{SLURM_JOB_ID}}";else tmpdir="/dev/shm";fi
+        bedtools genomecov -ibam {input.bam} -bg >  ${{tmpdir}}/{params.condition}.bg
+        bedSort ${{tmpdir}}/{params.condition}.bg ${{tmpdir}}/{params.condition}.bg
+        samtools view -H {input.bam}|grep '^@SQ'|cut -f2,3|sed 's/SN:\|LN://g' > ${{tmpdir}}/{params.condition}.chrom.sizes
+        bedGraphToBigWig ${{tmpdir}}/{params.condition}.bg ${{tmpdir}}/{params.condition}.chrom.sizes {output.coveragebw}
+        rm -rf ${{tmpdir}}/*
+        """
 
 #######################################################
 
@@ -186,16 +185,16 @@ rule atacorrect:
     message: 
         "Running {rule} for condition: {wildcards.condition} ({input.bam})"
     container: CONTAINERS["tobias"]
-    shell:"""
-TOBIAS ATACorrect \
-    -b {input.bam} \
-    -g {input.genome} \
-    -p {input.peaks} \
-    --cores {threads} \
-    --prefix {params.condition} \
-    --outdir {params.outdir} \
-    {params.blacklist} {params.autocorrect_extra_params}
-"""
+    shell:  """
+        TOBIAS ATACorrect \
+            -b {input.bam} \
+            -g {input.genome} \
+            -p {input.peaks} \
+            --cores {threads} \
+            --prefix {params.condition} \
+            --outdir {params.outdir} \
+            {params.blacklist} {params.autocorrect_extra_params}
+        """
 
 #######################################################
 
@@ -216,13 +215,13 @@ rule footprinting:
     message: 
         "Running {rule} for condition: {wildcards.condition} ({input.signal})"
     container: CONTAINERS["tobias"]
-    shell:"""
-TOBIAS FootprintScores \
-    --signal {input.signal} \
-    --regions {input.regions} \
-    --output {output.footprints} \
-    --cores {threads} {params.footprinting_extra_params}
-"""
+    shell: """
+        TOBIAS FootprintScores \
+            --signal {input.signal} \
+            --regions {input.regions} \
+            --output {output.footprints} \
+            --cores {threads} {params.footprinting_extra_params}
+        """
 
 #######################################################
 
@@ -244,24 +243,26 @@ rule uropa:
     envmodules: TOOLS["uropa"]["version"], TOOLS["python"]["version"]
     message: 
         "Running {rule}:"
-    shell:"""
-cd {params.outdir}
-cp {input.peaks} .
-python {params.create_uropa_json_script} \
-    -j {params.uropa_base_config} \
-    -b {input.peaks} \
-    -g {params.gtf} > uropa.json
-uropa -i uropa.json -t {threads}
-head -n1 peaks_finalhits.txt > {output.annotatedpeaksheader}
-tail -n +2 peaks_finalhits.txt > {output.annotatedpeaks}
-"""
+    shell: """
+        cd {params.outdir}
+        cp {input.peaks} .
+        python {params.create_uropa_json_script} \
+            -j {params.uropa_base_config} \
+            -b {input.peaks} \
+            -g {params.gtf} > uropa.json
+        uropa -i uropa.json -t {threads}
+        head -n1 peaks_finalhits.txt > {output.annotatedpeaksheader}
+        tail -n +2 peaks_finalhits.txt > {output.annotatedpeaks}
+        """
 
 #######################################################
 
 # lambda wildcards: unpack(c2c(wildcards))
 rule bindetect:
     input:
-        get_condition_footprint_bigwigs_from_contrast,
+        signals = get_condition_footprint_bigwigs_from_contrast,
+        peaks = rules.uropa.output.annotatedpeaks,
+        peak_header = rules.uropa.output.annotatedpeaksheader,	
     output:
         pdf=join(WORKDIR,"TFBS_{contrast}","bindetect_figures.pdf"),
     params:
@@ -269,28 +270,26 @@ rule bindetect:
         motifs = MOTIFS, 		
         genome = REFFA,
         bindetect_extra_params=BINDETECT_EXTRA_PARAMS,
-        peaks = rules.uropa.output.annotatedpeaks, # these should have been inputs but to ensure that these files are present, they have been used as inputs to footprinting which is an upstream rule. This is a roundabout way to have a simpler input function for this rule.
-        peak_header = rules.uropa.output.annotatedpeaksheader,	
     threads: getthreads("bindetect")
     container: CONTAINERS["tobias"]
     message: 
         "Running {rule} for {wildcards.contrast}"
-    shell:"""
-c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
-c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
-outdir=$(dirname "{output.pdf}")
-TOBIAS BINDetect \
-    --motifs {params.motifs} \
-    --signals {input} \
-    --genome {params.genome} \
-    --peaks {params.peaks} \
-    --peak-header {params.peak_header} \
-    --cores {threads} \
-    --cond-names $c1 $c2 \
-    --outdir $outdir \
-    {params.bindetect_extra_params}
-sleep 600
-"""
+    shell: """
+        c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
+        c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
+        outdir=$(dirname "{output.pdf}")
+        TOBIAS BINDetect \
+            --motifs {params.motifs} \
+            --signals {input.signals} \
+            --genome {params.genome} \
+            --peaks {input.peaks} \
+            --peak-header {input.peak_header} \
+            --cores {threads} \
+            --cond-names $c1 $c2 \
+            --outdir $outdir \
+            {params.bindetect_extra_params}
+        sleep 600
+        """
 
 rule reformat_annotated_bed:
     """
@@ -305,8 +304,7 @@ rule reformat_annotated_bed:
         bed=f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed",
         tmp=temp(f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed.tmp")
     container: CONTAINERS["base"]
-    shell:
-        """
+    shell: """
         bed_files=$(dirname {input.bindetect})/*/beds/*{wildcards.condition}_bound.bed
         cat $bed_files > {output.tmp}
         python {SCRIPTSDIR}/reformat_annotated_bed.py {output.tmp} {output.bed}
@@ -332,8 +330,7 @@ rule create_network:
         adjacency=f"{WORKDIR}/network/{{contrast}}/{{condition}}/adjacency.txt",
         edges=f"{WORKDIR}/network/{{contrast}}/{{condition}}/edges.txt"
     container: CONTAINERS["tobias"]
-    shell:
-        """
+    shell: """
         TOBIAS CreateNetwork \
             --TFBS {input.bed} \
             --origin {input.origin} \
@@ -370,13 +367,13 @@ rule bgzip_beds:
         script = join(SCRIPTSDIR,"_bgzip_all_beds.bash")
     threads: getthreads("gzip_beds")
     envmodules: TOOLS["ucsc"]["version"], TOOLS["samtools"]["version"], TOOLS["parallel"]["version"]
-    shell:"""
-cd {params.workdir}
-awk '{{print $2}}' {input} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip
-parallel -j {threads} < do_bgzip
-# rm -f do_bgzip
-cp {input} {output}
-"""
+    shell: """
+        cd {params.workdir}
+        awk '{{print $2}}' {input} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip
+        parallel -j {threads} < do_bgzip
+        # rm -f do_bgzip
+        cp {input} {output}
+        """
 
 #######################################################
 
@@ -391,18 +388,18 @@ rule join_bound:
     params:
         cont="{contrast}",
         cond="{cond}"
-    shell:"""
-x="{output.bedgz}"
-xbed="${{x%.*}}"
-while read a b;do 
-    if [ "$a" == "{params.cond}" ];then
-        zcat $b
-    fi
-done < {input} > $xbed
-bedSort $xbed $xbed
-bgzip -f --threads {threads} $xbed
-tabix -f -p bed $x
-"""
+    shell: """
+        x="{output.bedgz}"
+        xbed="${{x%.*}}"
+        while read a b;do 
+            if [ "$a" == "{params.cond}" ];then
+                zcat $b
+            fi
+        done < {input} > $xbed
+        bedSort $xbed $xbed
+        bgzip -f --threads {threads} $xbed
+        tabix -f -p bed $x
+        """
 
 #######################################################
 
@@ -420,51 +417,50 @@ rule plot_heatmaps_aggregates_init:
         aggregate = join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf")
     # message: 
     #     "Running {rule} for Contrast:{wildcards.contrast} and TF:{wildcards.TF}"
-    shell:"""
-tmpdir="/dev/shm"
-chars="abcdefghijklmnopqrstuvwxyz"
-randomtxt=$(for i in 1 2 3 4 5 6 7 8; do echo -n "${{chars:RANDOM%${{#chars}}:1}}";done)
-randomtxt=$(echo "$randomtxt$RANDOM")
-mkdir ${{tmpdir}}/${{randomtxt}}
-tmpdir="${{tmpdir}}/${{randomtxt}}"
+    shell: """
+        tmpdir="/dev/shm"
+        chars="abcdefghijklmnopqrstuvwxyz"
+        randomtxt=$(for i in 1 2 3 4 5 6 7 8; do echo -n "${{chars:RANDOM%${{#chars}}:1}}";done)
+        randomtxt=$(echo "$randomtxt$RANDOM")
+        mkdir ${{tmpdir}}/${{randomtxt}}
+        tmpdir="${{tmpdir}}/${{randomtxt}}"
 
-contrast="{params.contrast}"
-TF="{params.tf}"
-workdir="{params.workdir}"
-c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
-c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
-x=$(echo "${{TF}}"|awk -F"_" '{{print NF/2}}')
-tf=$(echo "${{TF}}"|sed "s/_/\\t/g"|cut -f1,$x|sed "s/\\t/_/g")
-cat > {output.plotcmd} << EOF
+        contrast="{params.contrast}"
+        TF="{params.tf}"
+        workdir="{params.workdir}"
+        c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
+        c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
+        x=$(echo "${{TF}}"|awk -F"_" '{{print NF/2}}')
+        tf=$(echo "${{TF}}"|sed "s/_/\\t/g"|cut -f1,$x|sed "s/\\t/_/g")
+        cat > {output.plotcmd} << EOF
 
-if [ ! -w "$tmpdir" ];then mkdir -p $tmpdir;fi
+        if [ ! -w "$tmpdir" ];then mkdir -p $tmpdir;fi
 
-zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c1}}_bound.bed.gz > ${{tmpdir}}/${{TF}}_${{c1}}_bound.bed
-zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c1}}_unbound.bed.gz > ${{tmpdir}}/${{TF}}_${{c1}}_unbound.bed
-zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c2}}_bound.bed.gz > ${{tmpdir}}/${{TF}}_${{c2}}_bound.bed
-zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c2}}_unbound.bed.gz > ${{tmpdir}}/${{TF}}_${{c2}}_unbound.bed
+        zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c1}}_bound.bed.gz > ${{tmpdir}}/${{TF}}_${{c1}}_bound.bed
+        zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c1}}_unbound.bed.gz > ${{tmpdir}}/${{TF}}_${{c1}}_unbound.bed
+        zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c2}}_bound.bed.gz > ${{tmpdir}}/${{TF}}_${{c2}}_bound.bed
+        zcat ${{workdir}}/TFBS_${{contrast}}/${{TF}}/beds/${{TF}}_${{c2}}_unbound.bed.gz > ${{tmpdir}}/${{TF}}_${{c2}}_unbound.bed
 
-TOBIAS PlotHeatmap \
- --TFBS ${{tmpdir}}/${{TF}}_${{c1}}_bound.bed ${{tmpdir}}/${{TF}}_${{c1}}_unbound.bed  \
- --TFBS-labels "bound" "unbound" \
- --TFBS ${{tmpdir}}/${{TF}}_${{c2}}_bound.bed ${{tmpdir}}/${{TF}}_${{c2}}_unbound.bed \
- --TFBS-labels "bound" "unbound" \
- --signals ${{workdir}}/bias_correction/${{c1}}_corrected.bw ${{workdir}}/bias_correction/${{c2}}_corrected.bw \
- --output {params.heatmap} \
- --share_colorbar --sort_by -1 --signal_labels $c1 $c2 --title "${{tf}}"
-TOBIAS PlotAggregate \
- --TFBS ${{tmpdir}}/${{TF}}_${{c1}}_bound.bed ${{tmpdir}}/${{TF}}_${{c2}}_bound.bed \
- --TFBS-labels "${{c1}}_bound" "${{c2}}_bound" \
- --signals ${{workdir}}/bias_correction/${{c1}}_corrected.bw ${{workdir}}/bias_correction/${{c2}}_corrected.bw \
- --signal_labels $c1 $c2 \
- --output {params.aggregate} \
- --share_y both --plot_boundaries --title "${{tf}}"
+        TOBIAS PlotHeatmap \
+        --TFBS ${{tmpdir}}/${{TF}}_${{c1}}_bound.bed ${{tmpdir}}/${{TF}}_${{c1}}_unbound.bed  \
+        --TFBS-labels "bound" "unbound" \
+        --TFBS ${{tmpdir}}/${{TF}}_${{c2}}_bound.bed ${{tmpdir}}/${{TF}}_${{c2}}_unbound.bed \
+        --TFBS-labels "bound" "unbound" \
+        --signals ${{workdir}}/bias_correction/${{c1}}_corrected.bw ${{workdir}}/bias_correction/${{c2}}_corrected.bw \
+        --output {params.heatmap} \
+        --share_colorbar --sort_by -1 --signal_labels $c1 $c2 --title "${{tf}}"
+        TOBIAS PlotAggregate \
+        --TFBS ${{tmpdir}}/${{TF}}_${{c1}}_bound.bed ${{tmpdir}}/${{TF}}_${{c2}}_bound.bed \
+        --TFBS-labels "${{c1}}_bound" "${{c2}}_bound" \
+        --signals ${{workdir}}/bias_correction/${{c1}}_corrected.bw ${{workdir}}/bias_correction/${{c2}}_corrected.bw \
+        --signal_labels $c1 $c2 \
+        --output {params.aggregate} \
+        --share_y both --plot_boundaries --title "${{tf}}"
 
-rm -rf ${{tmpdir}}
+        rm -rf ${{tmpdir}}
 
-EOF
-
-"""
+        EOF
+        """
 
 #######################################################
 
@@ -480,18 +476,17 @@ rule plot_heatmaps_aggregates:
     threads: getthreads("plot_heatmaps_aggregates")
     message: 
         "Generating plots"
-    shell:"""
-set -exo pipefail
+    shell: """
+        set -exo pipefail
 
-for i in {input};
-do 
-echo "bash $i"
-done > {params.workdir}/do_plots
-#parallel -j {threads} < {params.workdir}/do_plots
-bash {params.workdir}/do_plots
+        for i in {input};
+        do 
+        echo "bash $i"
+        done > {params.workdir}/do_plots
+        #parallel -j {threads} < {params.workdir}/do_plots
+        bash {params.workdir}/do_plots
 
-# cleanup
-# while read a b;do rm -f $b;done < {params.workdir}/do_plots
-rm -f {params.workdir}/do_plots
-
-"""
+        # cleanup
+        # while read a b;do rm -f $b;done < {params.workdir}/do_plots
+        rm -f {params.workdir}/do_plots
+        """
