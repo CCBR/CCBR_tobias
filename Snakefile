@@ -266,7 +266,6 @@ rule bindetect:
     output:
         pdf=join(WORKDIR,"TFBS_{contrast}","bindetect_figures.pdf"),
     params:
-        contrast="{contrast}",
         motifs = MOTIFS, 		
         genome = REFFA,
         bindetect_extra_params=BINDETECT_EXTRA_PARAMS,
@@ -275,8 +274,8 @@ rule bindetect:
     message: 
         "Running {rule} for {wildcards.contrast}"
     shell: """
-        c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
-        c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
+        c1=$(echo {wildcards.contrast} | awk -F\"_vs_\" '{{print $1}}')
+        c2=$(echo {wildcards.contrast} | awk -F\"_vs_\" '{{print $2}}')
         outdir=$(dirname "{output.pdf}")
         TOBIAS BINDetect \
             --motifs {params.motifs} \
