@@ -1,7 +1,7 @@
-# CCBR_tobias development version
+# CCBR_tobias 0.2.1
 
 - Update Biowulf module versions in driver script and snakemake config. (#4, @kelly-sovacool)
 
-# CCBR_tobias 0.3.0
+# CCBR_tobias 0.2.0
 
-TODO @kopardev
+Release notes were not written for this version or prior.
