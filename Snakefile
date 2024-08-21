@@ -277,6 +277,7 @@ rule bindetect:
         c1=$(echo {wildcards.contrast} | awk -F\"_vs_\" '{{print $1}}')
         c2=$(echo {wildcards.contrast} | awk -F\"_vs_\" '{{print $2}}')
         outdir=$(dirname "{output.pdf}")
+        export OPENBLAS_NUM_THREADS=1 # https://github.com/CCBR/CCBR_tobias/issues/11
         TOBIAS BINDetect \
             --motifs {params.motifs} \
             --signals {input.signals} \
