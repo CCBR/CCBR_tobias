@@ -80,15 +80,15 @@ rule all:
         expand(join(WORKDIR, "footprinting", "{condition}_footprints.bw"), condition=CONDITION_IDS),
         # run Bindetect for each contrast
         expand(join(WORKDIR, "TFBS_{contrast}", "bindetect_figures.pdf"),contrast=CONTRASTS),
-        expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
-        expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
+        #expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
+        #expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
         # plots
-        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
-        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
-        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
+        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
+        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
+        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
         # network
         # only needed for first condition in each contrast
-        [f"{WORKDIR}/network/{contrast}/{conditions_list[0]}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items()],
+        [f"{WORKDIR}/network/{contrast}/{condition}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items() for condition in conditions_list],
 #######################################################
 
 #######################################################
