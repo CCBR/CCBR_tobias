@@ -84,8 +84,8 @@ rule all:
         #expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
         # plots
         #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
-        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
-        #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
+        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
+        expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
         # network
         # only needed for first condition in each contrast
         [f"{WORKDIR}/network/{contrast}/{condition}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items() for condition in conditions_list],
@@ -358,8 +358,8 @@ rule create_cont_cond_tf_join_filelist:
 
 rule bgzip_beds:
     input:
-        rules.create_cont_cond_tf_join_filelist.output.tsv,
-        [f"{WORKDIR}/network/{contrast}/{conditions_list[0]}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items()] # run create_network first
+        flist=rules.create_cont_cond_tf_join_filelist.output.tsv,
+        edges=[f"{WORKDIR}/network/{contrast}/{conditions_list[0]}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items()] # run create_network first
     output:
         tsv=join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv")
     params:
@@ -369,10 +369,10 @@ rule bgzip_beds:
     envmodules: TOOLS["ucsc"]["version"], TOOLS["samtools"]["version"], TOOLS["parallel"]["version"]
     shell: """
         cd {params.workdir}
-        awk '{{print $2}}' {input} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip
+        awk '{{print $2}}' {input.flist} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip
         parallel -j {threads} < do_bgzip
         # rm -f do_bgzip
-        cp {input} {output}
+        cp {input.flist} {output.tsv}
         """
 
 #######################################################
