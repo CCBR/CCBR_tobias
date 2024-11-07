@@ -5,12 +5,15 @@ import os
 import pandas as pd
 import yaml
 import glob
+import re
 #######################################################
 
 #######################################################
 # INCLUDE OTHER .smk FILES
 #######################################################
 include: 'rules/init.smk'
+
+localrules: gunzip, gunzip_beds, plot_motifs, fav_motif_plots
 #######################################################
 
 with open(MOTIFS, 'r') as infile:
@@ -83,17 +86,71 @@ rule all:
         expand(join(WORKDIR, "footprinting", "{condition}_footprints.bw"), condition=CONDITION_IDS),
         # run Bindetect for each contrast
         expand(join(WORKDIR, "TFBS_{contrast}", "bindetect_figures.pdf"),contrast=CONTRASTS),
-        expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
+        #expand(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv"),contrast=CONTRASTS),
         #expand(join(WORKDIR, "overview_{cont}", "all_{cond}_bound.bed.gz"),zip,cont=CC1,cond=CC2),
         # plots
         #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.bash"),contrast=CONTRASTS,TF=TFs),
         #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),contrast=CONTRASTS,TF=TFs),
         #expand(join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf"),contrast=CONTRASTS,TF=TFs),
         # network
-        [f"{WORKDIR}/network/{contrast}/{condition}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items() for condition in conditions_list],
+        #[f"{WORKDIR}/network/{contrast}/{condition}/edges.txt" for contrast, conditions_list in CONTRASTS2CONDITIONS.items() for condition in conditions_list],
 #######################################################
 
-#######################################################
+if 'fav_motifs' in config.keys():
+    rule gunzip_beds:
+        input:
+            [f"{WORKDIR}/TFBS_{conditions}/{motif}/beds/{motif}_{condition}_{bound}.bed" 
+                for motif in config['fav_motifs'] 
+                for contrast, conditions in CONTRASTS2CONDITIONS.items()
+                for condition in conditions
+                for bound in ('bound', 'unbound')
+                if os.path.exists(f"{WORKDIR}/TFBS_{conditions}/{motif}/beds/{motif}_{condition}_{bound}.bed.gz")
+            ],
+    rule fav_motif_plots:
+        input:
+            [f"{WORKDIR}/plots/{motif}/{motif}_{conditions[0]}_vs_{conditions[1]}.heatmap.pdf" 
+                for motif in config['fav_motifs'] 
+                for contrast, conditions in CONTRASTS2CONDITIONS.items()
+                if all([
+                    os.path.exists(f"{WORKDIR}/TFBS_{conditions[0]}_vs_{conditions[1]}/{motif}/beds/{motif}_{conditions[0]}_unbound.bed"),
+                    os.path.exists(f"{WORKDIR}/TFBS_{conditions[0]}_vs_{conditions[1]}/{motif}/beds/{motif}_{conditions[0]}_bound.bed"),
+                    os.path.exists(f"{WORKDIR}/TFBS_{conditions[0]}_vs_{conditions[1]}/{motif}/beds/{motif}_{conditions[1]}_unbound.bed"),
+                    os.path.exists(f"{WORKDIR}/TFBS_{conditions[0]}_vs_{conditions[1]}/{motif}/beds/{motif}_{conditions[1]}_bound.bed"),
+                    ])
+            ],
+
+rule plot_motifs:
+    input:
+        c1_bound=join(WORKDIR,"TFBS_{c1}_vs_{c2}/{motif}/beds/{motif}_{c1}_bound.bed"),
+        c1_unbound=join(WORKDIR,"TFBS_{c1}_vs_{c2}/{motif}/beds/{motif}_{c1}_unbound.bed"),
+        c2_bound=join(WORKDIR,"TFBS_{c1}_vs_{c2}/{motif}/beds/{motif}_{c2}_bound.bed"),
+        c2_unbound=join(WORKDIR,"TFBS_{c1}_vs_{c2}/{motif}/beds/{motif}_{c2}_unbound.bed"),
+        c1_sig=join(WORKDIR,"bias_correction/{c1}_corrected.bw"),
+        c2_sig=join(WORKDIR,"bias_correction/{c2}_corrected.bw")
+    output:
+        heatmap=join(WORKDIR,"plots","{motif}","{motif}_{c1}_vs_{c2}.heatmap.pdf"),
+        aggregate=join(WORKDIR,"plots","{motif}","{motif}_{c1}_vs_{c2}.aggregate.pdf"),
+    container: CONTAINERS["tobias"]
+    shell:
+        """
+        tf_name=$(echo {wildcards.motif} | sed 's/_.*//')
+        TOBIAS PlotHeatmap \
+            --TFBS {input.c1_bound} {input.c1_unbound}  \
+            --TFBS-labels "bound" "unbound" \
+            --TFBS {input.c2_bound} {input.c2_unbound} \
+            --TFBS-labels "bound" "unbound" \
+            --signals {input.c1_sig} {input.c2_sig} \
+            --output {output.heatmap} \
+            --share_colorbar --sort_by -1 --signal_labels {wildcards.c1} {wildcards.c2} --title "${{tf_name}}"
+        TOBIAS PlotAggregate \
+            --TFBS {input.c1_bound} {input.c2_bound} \
+            --TFBS-labels "{wildcards.c1}_bound" "{wildcards.c2}_bound" \
+            --signals {input.c1_sig} {input.c2_sig} \
+            --signal_labels {wildcards.c1} {wildcards.c2} \
+            --output {output.aggregate} \
+            --share_y both --plot_boundaries --title "${{tf_name}}"
+        """
+
 
 rule tobias_download_data:
     """ 
@@ -388,6 +445,7 @@ rule bgzip_beds:
         cp {input.flist} {output.tsv}
         """
 
+'''
 rule bgzip_bed:
     input:
         bed="{file}.bed"
@@ -400,16 +458,16 @@ rule bgzip_bed:
         tabix -f -p bed {output.bedgz}
         """
 
-rule unbgzip:
+rule gunzip:
     input:
-        gz="{file}.gz"
+        gz="{file}.bed.gz"
     output:
-        ungz="{file}"
+        ungz="{file}.bed"
     shell:
         """
         gunzip -f {input.gz}
         """
-
+'''
 #######################################################
 
 # Join bound estimates per condition
@@ -438,7 +496,7 @@ rule join_bound:
         """
 
 #######################################################
-
+'''
 rule plot_heatmaps_aggregates_init:
     input:
         rules.bindetect.output.pdf,
@@ -526,3 +584,4 @@ rule plot_heatmaps_aggregates:
         # while read a b;do rm -f $b;done < {params.workdir}/do_plots
         rm -f {params.workdir}/do_plots
         """
+'''
