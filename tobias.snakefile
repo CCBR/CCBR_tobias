@@ -279,6 +279,7 @@ rule bindetect:
 c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
 c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
 outdir=$(dirname "{output.pdf}")
+export OPENBLAS_NUM_THREADS=1
 TOBIAS BINDetect \
     --motifs {params.motifs} \
     --signals {input} \
