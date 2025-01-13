@@ -1,4 +1,7 @@
 #!/bin/bash
+set -euxo pipefail
+
+# TODO remove module load statement, run in a container instead
 module load uropa
 #uropa --input uropa.config --prefix merged --threads 2 --log log
 cut -f 1-4,7-13,16-19 merged_finalhits.txt > merged_finalhits_sub

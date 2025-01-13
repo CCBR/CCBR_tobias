@@ -74,3 +74,9 @@ motifs: "PIPELINE_HOME/resources/HOCOMOCOv11_MOUSE_core_motifs.txt"
 autocorrect_extra_params: ""
 footprinting_extra_params: ""
 bindetect_extra_params: ""
+
+# favorite motifs to investigate for custom heatmap & aggregate plots
+# fav_motifs:
+#   - JUND_HUMAN.H11MO.0.A_JUND_HUMAN.H11MO.0.A
+#   - JUNB_HUMAN.H11MO.0.A_JUNB_HUMAN.H11MO.0.A
+#   - JUN_HUMAN.H11MO.0.A_JUN_HUMAN.H11MO.0.A
