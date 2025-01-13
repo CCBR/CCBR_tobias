@@ -94,7 +94,7 @@ rule all:
 #######################################################
 
 rule tobias_download_data:
-    """ 
+    """
     Download example data from Tobias
     """
     output:
@@ -107,7 +107,7 @@ rule tobias_download_data:
 
 
 rule condition_bam:
-# """ 
+# """
 # Merge all replicate BAMs into a single "condition" BAM file
 # lambda wildcards: config["data"][wildcards.condition]
 # """
@@ -177,13 +177,13 @@ rule atacorrect:
         bias = join(WORKDIR, "bias_correction", "{condition}_bias.bw"),
         expected = join(WORKDIR, "bias_correction", "{condition}_expected.bw"),
         corrected = join(WORKDIR, "bias_correction", "{condition}_corrected.bw"),
-    params: 
+    params:
         blacklist = BLACKLIST,
         outdir = join(WORKDIR, "bias_correction"),
         condition = "{condition}",
         autocorrect_extra_params = AUTOCORRECT_EXTRA_PARAMS
     threads: getthreads("atacorrect")
-    message: 
+    message:
         "Running {rule} for condition: {wildcards.condition} ({input.bam})"
     container: CONTAINERS["tobias"]
     shell:"""
@@ -203,17 +203,17 @@ rule footprinting:
 # """
 # Create a per-condition footprinting BIGWIG from a per-condition bias-corrected BIGWIG
 # """
-    input: 
+    input:
         signal = rules.atacorrect.output.corrected, 	#os.path.join(OUTPUTDIR, "bias_correction", "{condition}_corrected.bw"),
         regions = PEAKS,		#os.path.join(OUTPUTDIR, "peak_calling", "all_merged.bed")
         annotatedpeaks = join(WORKDIR,"peaks","annotated_peaks"),   # annotated_peaks are not required by this rule, but this makes sure that uropa is run upstream from footprinting, which is in turn upstream from bindetect which requires annotated peaks
         annotatedpeaksheader = join(WORKDIR,"peaks","annotated_peaks_header")
-    output: 
+    output:
         footprints = join(WORKDIR, "footprinting", "{condition}_footprints.bw"),
     params:
         footprinting_extra_params = FOOTPRINTING_EXTRA_PARAMS
     threads: getthreads("footprinting")
-    message: 
+    message:
         "Running {rule} for condition: {wildcards.condition} ({input.signal})"
     container: CONTAINERS["tobias"]
     shell:"""
@@ -242,7 +242,7 @@ rule uropa:
         create_uropa_json_script = join(SCRIPTSDIR,"create_uropa_config.py")
     threads: getthreads("uropa")
     envmodules: TOOLS["uropa"]["version"], TOOLS["python"]["version"]
-    message: 
+    message:
         "Running {rule}:"
     shell:"""
 cd {params.outdir}
@@ -266,19 +266,20 @@ rule bindetect:
         pdf=join(WORKDIR,"TFBS_{contrast}","bindetect_figures.pdf"),
     params:
         contrast="{contrast}",
-        motifs = MOTIFS, 		
+        motifs = MOTIFS,
         genome = REFFA,
         bindetect_extra_params=BINDETECT_EXTRA_PARAMS,
         peaks = rules.uropa.output.annotatedpeaks, # these should have been inputs but to ensure that these files are present, they have been used as inputs to footprinting which is an upstream rule. This is a roundabout way to have a simpler input function for this rule.
-        peak_header = rules.uropa.output.annotatedpeaksheader,	
+        peak_header = rules.uropa.output.annotatedpeaksheader,
     threads: getthreads("bindetect")
     container: CONTAINERS["tobias"]
-    message: 
+    message:
         "Running {rule} for {wildcards.contrast}"
     shell:"""
 c1=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $1}}')
 c2=$(echo {params.contrast}|awk -F\"_vs_\" '{{print $2}}')
 outdir=$(dirname "{output.pdf}")
+export OPENBLAS_NUM_THREADS=1
 TOBIAS BINDetect \
     --motifs {params.motifs} \
     --signals {input} \
@@ -343,9 +344,9 @@ rule create_network:
 #######################################################
 
 rule create_cont_cond_tf_join_filelist:
-    input: 
+    input:
         rules.bindetect.output.pdf
-    output: 
+    output:
         tsv=temp(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv.tmp")),
     run:
         cont=wildcards.contrast
@@ -394,7 +395,7 @@ rule join_bound:
     shell:"""
 x="{output.bedgz}"
 xbed="${{x%.*}}"
-while read a b;do 
+while read a b;do
     if [ "$a" == "{params.cond}" ];then
         zcat $b
     fi
@@ -418,7 +419,7 @@ rule plot_heatmaps_aggregates_init:
         workdir = WORKDIR,
         heatmap = join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),
         aggregate = join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf")
-    # message: 
+    # message:
     #     "Running {rule} for Contrast:{wildcards.contrast} and TF:{wildcards.TF}"
     shell:"""
 tmpdir="/dev/shm"
@@ -478,13 +479,13 @@ rule plot_heatmaps_aggregates:
         workdir = WORKDIR
     container: CONTAINERS["tobias"]
     threads: getthreads("plot_heatmaps_aggregates")
-    message: 
+    message:
         "Generating plots"
     shell:"""
 set -exo pipefail
 
 for i in {input};
-do 
+do
 echo "bash $i"
 done > {params.workdir}/do_plots
 #parallel -j {threads} < {params.workdir}/do_plots

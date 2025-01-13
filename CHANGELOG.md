@@ -1,6 +1,7 @@
 ## CCBR_tobias development version
 
 - Fix wildcard not found error. (#10, @kelly-sovacool)
+- Fix resource error in `bindetect`. (#11, @kelly-sovacool, @batzza)
 
 ## CCBR_tobias 0.3.0
 
