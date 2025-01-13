@@ -99,8 +99,8 @@ rule all:
 if 'fav_motifs' in config.keys():
     rule gunzip_beds:
         input:
-            [f"{WORKDIR}/TFBS_{conditions}/{motif}/beds/{motif}_{condition}_{bound}.bed" 
-                for motif in config['fav_motifs'] 
+            [f"{WORKDIR}/TFBS_{conditions}/{motif}/beds/{motif}_{condition}_{bound}.bed"
+                for motif in config['fav_motifs']
                 for contrast, conditions in CONTRASTS2CONDITIONS.items()
                 for condition in conditions
                 for bound in ('bound', 'unbound')
@@ -108,8 +108,8 @@ if 'fav_motifs' in config.keys():
             ],
     rule fav_motif_plots:
         input:
-            [f"{WORKDIR}/plots/{motif}/{motif}_{conditions[0]}_vs_{conditions[1]}.heatmap.pdf" 
-                for motif in config['fav_motifs'] 
+            [f"{WORKDIR}/plots/{motif}/{motif}_{conditions[0]}_vs_{conditions[1]}.heatmap.pdf"
+                for motif in config['fav_motifs']
                 for contrast, conditions in CONTRASTS2CONDITIONS.items()
                 if all([
                     os.path.exists(f"{WORKDIR}/TFBS_{conditions[0]}_vs_{conditions[1]}/{motif}/beds/{motif}_{conditions[0]}_unbound.bed"),
@@ -153,20 +153,20 @@ rule plot_motifs:
 
 
 rule tobias_download_data:
-    """ 
+    """
     Download example data from Tobias
     """
     output:
         directory('data-tobias-2020')
     container: CONTAINERS["tobias"]
-    shell: 
+    shell:
         """
         TOBIAS DownloadData --bucket data-tobias-2020
         """
 
 
 rule condition_bam:
-# """ 
+# """
 # Merge all replicate BAMs into a single "condition" BAM file
 # lambda wildcards: config["data"][wildcards.condition]
 # """
@@ -182,7 +182,7 @@ rule condition_bam:
         outdir=join(WORKDIR,"bams"),
         mem=getmemG("condition_bam"),
         condition="{condition}",
-    shell: 
+    shell:
         """
         if [ -w "/lscratch/${{SLURM_JOB_ID}}" ]; then tmpdir="/lscratch/${{SLURM_JOB_ID}}"; else tmpdir="/dev/shm"; fi
         sorted_bams=""
@@ -212,7 +212,7 @@ rule coverage_bw:
         "Running {rule} for condition: {wildcards.condition} ({input.bam})"
     threads: getthreads("coverage_bw")
     envmodules: TOOLS["bedtools"]["version"],TOOLS["samtools"]["version"], TOOLS["ucsc"]["version"]
-    shell: 
+    shell:
         """
         if [ -w "/lscratch/${{SLURM_JOB_ID}}" ]; then tmpdir="/lscratch/${{SLURM_JOB_ID}}"; else tmpdir="/dev/shm"; fi
         bedtools genomecov -ibam {input.bam} -bg >  ${{tmpdir}}/{params.condition}.bg
@@ -238,16 +238,16 @@ rule atacorrect:
         bias = join(WORKDIR, "bias_correction", "{condition}_bias.bw"),
         expected = join(WORKDIR, "bias_correction", "{condition}_expected.bw"),
         corrected = join(WORKDIR, "bias_correction", "{condition}_corrected.bw"),
-    params: 
+    params:
         blacklist = BLACKLIST,
         outdir = join(WORKDIR, "bias_correction"),
         condition = "{condition}",
         autocorrect_extra_params = AUTOCORRECT_EXTRA_PARAMS
     threads: getthreads("atacorrect")
-    message: 
+    message:
         "Running {rule} for condition: {wildcards.condition} ({input.bam})"
     container: CONTAINERS["tobias"]
-    shell:  
+    shell:
         """
         TOBIAS ATACorrect \
             -b {input.bam} \
@@ -265,20 +265,20 @@ rule footprinting:
 # """
 # Create a per-condition footprinting BIGWIG from a per-condition bias-corrected BIGWIG
 # """
-    input: 
+    input:
         signal = rules.atacorrect.output.corrected, 	#os.path.join(OUTPUTDIR, "bias_correction", "{condition}_corrected.bw"),
         regions = PEAKS,		#os.path.join(OUTPUTDIR, "peak_calling", "all_merged.bed")
         annotatedpeaks = join(WORKDIR,"peaks","annotated_peaks"),   # annotated_peaks are not required by this rule, but this makes sure that uropa is run upstream from footprinting, which is in turn upstream from bindetect which requires annotated peaks
         annotatedpeaksheader = join(WORKDIR,"peaks","annotated_peaks_header")
-    output: 
+    output:
         footprints = join(WORKDIR, "footprinting", "{condition}_footprints.bw"),
     params:
         footprinting_extra_params = FOOTPRINTING_EXTRA_PARAMS
     threads: getthreads("footprinting")
-    message: 
+    message:
         "Running {rule} for condition: {wildcards.condition} ({input.signal})"
     container: CONTAINERS["tobias"]
-    shell: 
+    shell:
         """
         TOBIAS FootprintScores \
             --signal {input.signal} \
@@ -305,9 +305,9 @@ rule uropa:
         create_uropa_json_script = join(SCRIPTSDIR,"create_uropa_config.py")
     threads: getthreads("uropa")
     envmodules: TOOLS["uropa"]["version"], TOOLS["python"]["version"]
-    message: 
+    message:
         "Running {rule}:"
-    shell: 
+    shell:
         """
         cd {params.outdir}
         cp {input.peaks} .
@@ -327,19 +327,22 @@ checkpoint bindetect:
     input:
         signals = get_condition_footprint_bigwigs_from_contrast,
         peaks = rules.uropa.output.annotatedpeaks,
-        peak_header = rules.uropa.output.annotatedpeaksheader,	
+        peak_header = rules.uropa.output.annotatedpeaksheader,
     output:
         pdf=join(WORKDIR,"TFBS_{contrast}","bindetect_figures.pdf"),
         tfbs=directory(expand(join(WORKDIR,"TFBS_{{contrast}}","{motif}_{motif}","beds"), motif=motif_names))
     params:
-        motifs = MOTIFS, 		
+        contrast="{contrast}",
+        motifs = MOTIFS,
         genome = REFFA,
         bindetect_extra_params=BINDETECT_EXTRA_PARAMS,
+        peaks = rules.uropa.output.annotatedpeaks, # these should have been inputs but to ensure that these files are present, they have been used as inputs to footprinting which is an upstream rule. This is a roundabout way to have a simpler input function for this rule.
+        peak_header = rules.uropa.output.annotatedpeaksheader,
     threads: getthreads("bindetect")
     container: CONTAINERS["tobias"]
-    message: 
+    message:
         "Running {rule} for {wildcards.contrast}"
-    shell: 
+    shell:
         """
         c1=$(echo {wildcards.contrast} | awk -F\"_vs_\" '{{print $1}}')
         c2=$(echo {wildcards.contrast} | awk -F\"_vs_\" '{{print $2}}')
@@ -358,6 +361,7 @@ checkpoint bindetect:
         sleep 600
         """
 
+
 rule reformat_annotated_bed:
     """
     Strip ensembl gene version numbers, shorten motif IDs, and combine into one bed file.
@@ -371,7 +375,7 @@ rule reformat_annotated_bed:
         bed=f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed",
         tmp=temp(f"{WORKDIR}/TFBS_{{contrast}}_reformatted/{{condition}}.bed.tmp")
     container: CONTAINERS["base"]
-    shell: 
+    shell:
         """
         bed_files=$(dirname {input.bindetect})/*/beds/*{wildcards.condition}_bound.bed
         cat $bed_files | sort -k1,1 -k2,2n > {output.tmp}
@@ -398,7 +402,7 @@ rule create_network:
         adjacency=f"{WORKDIR}/network/{{contrast}}/{{condition}}/adjacency.txt",
         edges=f"{WORKDIR}/network/{{contrast}}/{{condition}}/edges.txt"
     container: CONTAINERS["tobias"]
-    shell: 
+    shell:
         """
         TOBIAS CreateNetwork \
             --TFBS {input.bed} \
@@ -409,9 +413,9 @@ rule create_network:
 #######################################################
 
 rule create_cont_cond_tf_join_filelist:
-    input: 
+    input:
         rules.bindetect.output.pdf
-    output: 
+    output:
         tsv=temp(join(WORKDIR,"TFBS_{contrast}","bound_beds_list.tsv.tmp")),
     run:
         cont=wildcards.contrast
@@ -436,7 +440,7 @@ rule bgzip_beds:
         script = join(SCRIPTSDIR,"_bgzip_all_beds.bash")
     threads: getthreads("gzip_beds")
     envmodules: TOOLS["ucsc"]["version"], TOOLS["samtools"]["version"], TOOLS["parallel"]["version"]
-    shell: 
+    shell:
         """
         cd {params.workdir}
         awk '{{print $2}}' {input.flist} | xargs dirname | sort | uniq | xargs -I % echo bash {params.script} % > do_bgzip
@@ -485,7 +489,7 @@ rule join_bound:
         """
         x="{output.bedgz}"
         xbed="${{x%.*}}"
-        while read a b;do 
+        while read a b;do
             if [ "$a" == "{params.cond}" ];then
                 zcat $b
             fi
@@ -509,7 +513,7 @@ rule plot_heatmaps_aggregates_init:
         workdir = WORKDIR,
         heatmap = join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.heatmap.pdf"),
         aggregate = join(WORKDIR,"TFBS_{contrast}","{TF}","plots","{TF}_{contrast}.aggregate.pdf")
-    shell: 
+    shell:
         """
         if [ -w "/lscratch/${{SLURM_JOB_ID}}" ]; then tmpdir="/lscratch/${{SLURM_JOB_ID}}"; else tmpdir="/dev/shm"; fi
         chars="abcdefghijklmnopqrstuvwxyz"
@@ -567,14 +571,13 @@ rule plot_heatmaps_aggregates:
         workdir = WORKDIR
     container: CONTAINERS["tobias"]
     threads: getthreads("plot_heatmaps_aggregates")
-    message: 
+    message:
         "Generating plots"
-    shell: 
+    shell:
         """
         set -exo pipefail
-
         for i in {input};
-        do 
+        do
         echo "bash $i"
         done > {params.workdir}/do_plots
         #parallel -j {threads} < {params.workdir}/do_plots
