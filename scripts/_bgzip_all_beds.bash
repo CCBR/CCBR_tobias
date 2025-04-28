@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euxo pipefail
 
 FOLDER=$1
 cd $FOLDER
