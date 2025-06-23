@@ -153,7 +153,7 @@ function dryrun() {
 
 function unlock() {
   runcheck
-  run "--unlock"  
+  run "--unlock"
 }
 
 
@@ -196,17 +196,17 @@ function preruncleanup() {
   # Cleanup function to rename/move files related to older runs to prevent overwriting them.
   echo "Running..."
   # check initialization
-  check_essential_files 
+  check_essential_files
   cd $WORKDIR
 
   ## Archive previous run files
-  if [ -f ${WORKDIR}/snakemake.log ];then 
+  if [ -f ${WORKDIR}/snakemake.log ];then
     modtime=$(stat ${WORKDIR}/snakemake.log |grep Modify|awk '{print $2,$3}'|awk -F"." '{print $1}'|sed "s/ //g"|sed "s/-//g"|sed "s/://g")
     mv ${WORKDIR}/snakemake.log ${WORKDIR}/logs/snakemake.${modtime}.log
-    if [ -f ${WORKDIR}/snakemake.log.HPC_summary.txt ];then 
+    if [ -f ${WORKDIR}/snakemake.log.HPC_summary.txt ];then
       mv ${WORKDIR}/snakemake.log.HPC_summary.txt ${WORKDIR}/stats/snakemake.${modtime}.log.HPC_summary.txt
     fi
-    if [ -f ${WORKDIR}/snakemake.stats ];then 
+    if [ -f ${WORKDIR}/snakemake.stats ];then
       mv ${WORKDIR}/snakemake.stats ${WORKDIR}/stats/snakemake.${modtime}.stats
     fi
     if [ -f ${WORKDIR}/run_git_commit.txt ];then
@@ -253,11 +253,11 @@ function run() {
     snakemake -s $SNAKEFILE \
     --report ${WORKDIR}/runlocal_snakemake_report.html \
     --directory $WORKDIR \
-    --configfile ${WORKDIR}/config.yaml 
+    --configfile ${WORKDIR}/config.yaml
   fi
 
   elif [ "$1" == "slurm" ];then
-  
+
   preruncleanup
 
 #define partitions
@@ -299,7 +299,7 @@ if [ "\$?" -eq "0" ];then
   snakemake -s $SNAKEFILE \
   --directory $WORKDIR \
   --report ${WORKDIR}/runslurm_snakemake_report.html \
-  --configfile ${WORKDIR}/config.yaml 
+  --configfile ${WORKDIR}/config.yaml
 fi
 
 bash <(curl https://raw.githubusercontent.com/CCBR/Tools/master/Biowulf/gather_cluster_stats_biowulf.sh 2>/dev/null) ${WORKDIR}/snakemake.log > ${WORKDIR}/snakemake.log.HPC_summary.txt
@@ -444,8 +444,3 @@ function main(){
 
 
 main "$@"
-
-
-
-
-

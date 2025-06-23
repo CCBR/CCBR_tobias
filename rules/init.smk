@@ -5,28 +5,28 @@ import shutil
 
 print("#"*100)
 print("""
-#   ____ ____ ____  ____  
-#  / ___/ ___| __ )|  _ \ 
+#   ____ ____ ____  ____
+#  / ___/ ___| __ )|  _ \
 # | |  | |   |  _ \| |_) |
-# | |__| |___| |_) |  _ < 
-#  \____\____|____/|_| \_\ 
-#  _____ ___  ____ ___    _    ____  
-# |_   _/ _ \| __ )_ _|  / \  / ___| 
-#   | || | | |  _ \| |  / _ \ \___ \ 
+# | |__| |___| |_) |  _ <
+#  \____\____|____/|_| \_\
+#  _____ ___  ____ ___    _    ____
+# |_   _/ _ \| __ )_ _|  / \  / ___|
+#   | || | | |  _ \| |  / _ \ \___ \
 #   | || |_| | |_) | | / ___ \ ___) |
-#   |_| \___/|____/___/_/   \_\____/ 
-#  ____  _            _ _            
-# |  _ \(_)_ __   ___| (_)_ __   ___ 
-# | |_) | | '_ \ / _ \ | | '_ \ / _ \ 
+#   |_| \___/|____/___/_/   \_\____/
+#  ____  _            _ _
+# |  _ \(_)_ __   ___| (_)_ __   ___
+# | |_) | | '_ \ / _ \ | | '_ \ / _ \
 # |  __/| | |_) |  __/ | | | | |  __/
 # |_|   |_| .__/ \___|_|_|_| |_|\___|
-#         |_|                        
+#         |_|
 """)
 print("#"*100)
 
 
 #########################################################
-# FILE-ACTION FUNCTIONS 
+# FILE-ACTION FUNCTIONS
 #########################################################
 def check_existence(filename):
   if not os.path.exists(filename):
@@ -48,12 +48,12 @@ def get_file_size(filename):
         return os.stat(filename).st_size
 
 #########################################################
-# MOTIF related FUNCTIONS 
+# MOTIF related FUNCTIONS
 #########################################################
 
 def get_motif_format(content):
     """ Get motif format from string of content """
-    
+
     #Estimate input format
     if re.match(r".*MEME version.+", content, re.DOTALL) is not None: # MOTIF\s.+letter-probability matrix.+[\d\.\s]+", content, re.MULTILINE) is not None:
         motif_format = "meme"
@@ -66,7 +66,7 @@ def get_motif_format(content):
 
     elif re.match(r"AC\s.+", content, re.DOTALL) is not None:
         motif_format = "transfac"
-    
+
     else:
         motif_format = "unknown"
 
@@ -94,7 +94,7 @@ def get_TFs(path):
 #########################################################
 CONFIGFILE = str(workflow.overwrite_configfiles[0])
 
-# set memory limit 
+# set memory limit
 # used for sambamba sort, etc
 # MEMORY="100"
 
@@ -256,7 +256,7 @@ for contrast in contrasts:
         CC2.append(cond)
     CONTRASTS.append(contrastname)
     CONTRASTS2CONDITIONSBW[contrastname]=list()
-    CONTRASTS2CONDITIONS[contrastname]=conditions 
+    CONTRASTS2CONDITIONS[contrastname]=conditions
     for c in conditions:
         fname=c+"_footprints.bw"
         CONTRASTS2CONDITIONSBW[contrastname].append(join(WORKDIR, "footprinting", fname))
@@ -297,7 +297,7 @@ print("# Uropa Base Template YAML: ",UROPABASEYAML)
 print("# Cluster JSON: ",CLUSTERJSON)
 print("# Genome :",GENOME)
 print("# Reference Fasta :",REFFA)
-if BLACKLIST != "": 
+if BLACKLIST != "":
     print("# Blacklist Bed :",BLACKLIST)
 print("# Motifs database: ",MOTIFS)
 print("# Peaks Bed :",PEAKS)
@@ -310,4 +310,3 @@ for i,c in enumerate(CONTRASTS2CONDITIONS.keys()):
 print("#"*100)
 
 # exit("Done")
-

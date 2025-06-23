@@ -35,7 +35,7 @@ data:
 #   contrastA : ["group2","group1"]
 
 contrasts:
-  A: ["D4_Meso_iCre_Dox","iCre_D0"]
+  A: ["D4_Meso_iCre_Dox", "iCre_D0"]
 
 # peaks BED file to use
 peaks: "PIPELINE_HOME/.test/rawdata/merged.bed"

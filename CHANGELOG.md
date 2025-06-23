@@ -1,5 +1,7 @@
 ## CCBR_tobias development version
 
+## CCBR_tobias 0.3.1
+
 - Fix wildcard not found error. (#10, @kelly-sovacool)
 - Fix resource error in `bindetect`. (#11, @kelly-sovacool, @batzza)
 - Add Zenodo DOI badge to README.
