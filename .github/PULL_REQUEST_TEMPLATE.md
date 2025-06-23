@@ -12,7 +12,6 @@ If this PR fixes any issues, [use a keyword](https://docs.github.com/en/issues/t
 when referring to the issue.
 -->
 
-
 ## PR Checklist
 
 (~Strikethrough~ any points that are not applicable.)
