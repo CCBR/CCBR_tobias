@@ -1,18 +1,20 @@
 ## CCBR TOBIAS snakemake pipeline
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13327936.svg)](https://doi.org/10.5281/zenodo.13327936)
+
 TOBIAS or "Transcription factor Occupancy prediction By Investigation of ATAC-seq Signal" is a framework of tools for investigating transcription factor binding from ATAC-seq signal. The analysis involves numerous sequential steps (or tasks) to be executed in order to successfully predict TF occupancy footprint from deduplicated alignment BAM files of ATACseq raw data (fastq files). Here we use Snakemake to automate the sequential execution on any HPC. Most tools used by the pipeline are completely containerized in docker format and can be invoked using singularity on the HPC. The minimum requirements for running this pipeline are:
 
-* Python (>=3.5)
-* Snakemake(>=5.24.1)
-* Singularity(>=3.7.4)
+- Python (>=3.5)
+- Snakemake(>=5.24.1)
+- Singularity(>=3.7.4)
 
 This pipeline was built using [the CCBR_SnakemakePipelineCookiecutter](https://github.com/CCBR/CCBR_SnakemakePipelineCookiecutter).
 
 Please visit the following pages for more details directly from the authors of TOBIAS:
 
-* https://github.molgen.mpg.de/pages/loosolab/www/software/TOBIAS/
-* https://github.com/loosolab/TOBIAS
-* https://github.molgen.mpg.de/loosolab/TOBIAS_snakemake
+- https://github.molgen.mpg.de/pages/loosolab/www/software/TOBIAS/
+- https://github.com/loosolab/TOBIAS
+- https://github.molgen.mpg.de/loosolab/TOBIAS_snakemake
 
 ### Quick start instructions for running CCBR_tobias on [Biowulf](https://hpc.nih.gov/)
 
@@ -38,8 +40,8 @@ Required Arguments:
 
 The pipeline requires only 2 arguments:
 
-* Runmode
-* Working dir
+- Runmode
+- Working dir
 
 Generally, we anticipate CCBR_tobais to be run in 3 steps:
 
@@ -49,30 +51,30 @@ Generally, we anticipate CCBR_tobais to be run in 3 steps:
 % bash /data/CCBR_Pipeliner/Pipelines/CCBR_tobias/dev/run_tobias.bash -m=init -w=/path/to/outfolder
 ```
 
-This creates the output folder, so it should not exists before running `init`. Along with other scripts and files, `init` copies `config.yaml` and `cluster.json`  to the output folder, which can then be edited by the user. Some key input values that need to be edited before running the pipeline are as follows:
+This creates the output folder, so it should not exists before running `init`. Along with other scripts and files, `init` copies `config.yaml` and `cluster.json` to the output folder, which can then be edited by the user. Some key input values that need to be edited before running the pipeline are as follows:
 
-* `data`: points to the CCBR_ATACseq `dedup.bam` replicate files per sample. The sample names should match those later used in `contrasts`
+- `data`: points to the CCBR_ATACseq `dedup.bam` replicate files per sample. The sample names should match those later used in `contrasts`
 
-* `contrasts`: which contrasts to perform using TOBIAS. The 2 groups should be already defined under `data`
+- `contrasts`: which contrasts to perform using TOBIAS. The 2 groups should be already defined under `data`
 
-* `peaks`: areas of interests to query for differential foot printing. This should be manually curated before running CCBR_tobias pipeline
+- `peaks`: areas of interests to query for differential foot printing. This should be manually curated before running CCBR_tobias pipeline
 
-* `genome`: currently supports **mm10** for mouse with Gencode M21 annotation and **hg38** for human Gencode v30 annotation.
+- `genome`: currently supports **mm10** for mouse with Gencode M21 annotation and **hg38** for human Gencode v30 annotation.
 
-* `motifs`: motif database to use for analysis. The choices are:
+- `motifs`: motif database to use for analysis. The choices are:
 
-| database      | organism    | version            |
-| ------------- | ----------- | ------------------ |
-| HOCOMOCO\_v11 | Human       | Core               |
-| HOCOMOCO\_v11 | Human       | Full               |
-| HOCOMOCO\_v11 | Mouse       | Core               |
-| HOCOMOCO\_v11 | Mouse       | Full               |
-| HOCOMOCO\_v11 | Human+Mouse | Core               |
-| HOCOMOCO\_v11 | Human+Mouse | Full               |
-| JASPAR2020    | \-          | core\_nonredundant |
-| JASPAR2020    | \-          | core\_redundant    |
-| JASPAR2020    | vertebrate  | core\_nonredundant |
-| JASPAR2020    | vertebrate  | core\_redundant    |
+| database     | organism    | version           |
+| ------------ | ----------- | ----------------- |
+| HOCOMOCO_v11 | Human       | Core              |
+| HOCOMOCO_v11 | Human       | Full              |
+| HOCOMOCO_v11 | Mouse       | Core              |
+| HOCOMOCO_v11 | Mouse       | Full              |
+| HOCOMOCO_v11 | Human+Mouse | Core              |
+| HOCOMOCO_v11 | Human+Mouse | Full              |
+| JASPAR2020   | \-          | core_nonredundant |
+| JASPAR2020   | \-          | core_redundant    |
+| JASPAR2020   | vertebrate  | core_nonredundant |
+| JASPAR2020   | vertebrate  | core_redundant    |
 
 #### 2. Dryrun
 
@@ -80,11 +82,11 @@ This creates the output folder, so it should not exists before running `init`. A
 % bash /data/CCBR_Pipeliner/Pipelines/CCBR_tobias/dev/run_tobias.bash -m=dryrun -w=/path/to/outfolder
 ```
 
-Running the above command ensures that 
+Running the above command ensures that
 
-* output folder exists and contains the required files
-* examples the `config.yaml` files and makes sure that we have appropriate permissions to the input files and output locations
-* runs snakemake in `dry-run` mode using the `cluster.json` to enlist a table of rules/tasks to be run 
+- output folder exists and contains the required files
+- examples the `config.yaml` files and makes sure that we have appropriate permissions to the input files and output locations
+- runs snakemake in `dry-run` mode using the `cluster.json` to enlist a table of rules/tasks to be run
 
 #### 3. Run
 
@@ -106,11 +108,11 @@ The merged BAMs are converted to normalized bigwigs for visualization with IGV. 
 
 The merged BAMs from the `bams` folder are corrected for Tn5 insertion bias. 4 separate bigwigs are expected as output on a per-condition basis:
 
-* uncorrected bigwig: The uncorrected cutsite signal representing observed reads in basepair resolution. This track is normalized for sequencing depth but not corrected in terms of Tn5 bias.
-* corrected bigwig: This is the corrected cutsite signal and will contain both positive and negative values for positions respectively more or less cut than expected. Remember, bigwigs cannot have positive and negative values at the same coordinate.
-* biased bigwig: The raw bias score against the PWM/DWM bias matrix. This is purely based on sequence.
-* expected bigwig: Knowing the cutsite preferences of the Tn5 enzyme the expected cutsite signal is reported here given the influence of bias. It is the raw bias score scaled towards the sum of cuts in the region, and can be directly compared to the uncorrected signal.
-* pdf: Plot showing the observed Tn5 bias before and after correction can be found here.
+- uncorrected bigwig: The uncorrected cutsite signal representing observed reads in basepair resolution. This track is normalized for sequencing depth but not corrected in terms of Tn5 bias.
+- corrected bigwig: This is the corrected cutsite signal and will contain both positive and negative values for positions respectively more or less cut than expected. Remember, bigwigs cannot have positive and negative values at the same coordinate.
+- biased bigwig: The raw bias score against the PWM/DWM bias matrix. This is purely based on sequence.
+- expected bigwig: Knowing the cutsite preferences of the Tn5 enzyme the expected cutsite signal is reported here given the influence of bias. It is the raw bias score scaled towards the sum of cuts in the region, and can be directly compared to the uncorrected signal.
+- pdf: Plot showing the observed Tn5 bias before and after correction can be found here.
 
 #### footprinting
 
@@ -118,14 +120,14 @@ Using the bias corrected corrected bigwig a per-condition footprinting bigwig is
 
 #### peaks
 
-Supplied `peaks` are annotated using *UROPA* and annotations are stored here.
+Supplied `peaks` are annotated using _UROPA_ and annotations are stored here.
 
-#### TFBS_{contrast}
+#### TFBS\_{contrast}
 
 One TFBS folder is create for each contrast. There are created by running `bindetect`. Each TFBS folder contains numerous (100s) subfolders, one for each motif in the motif database selected using `motifs` parameter in `config.yaml`. Each of these per-TF-motif subfolder also has a standard folder structure including a subfolder name `beds`. This contains:
 
-* a bed file for the TFBS for the motif in consideration which fall within the "regions of interest" as declared by the `peaks` parameter in `config.yaml`
-* the TFBS sites in the above bed file are split into "bound" and "unbound" sites for each contrast separately resulting into a total of 4 bed files.
+- a bed file for the TFBS for the motif in consideration which fall within the "regions of interest" as declared by the `peaks` parameter in `config.yaml`
+- the TFBS sites in the above bed file are split into "bound" and "unbound" sites for each contrast separately resulting into a total of 4 bed files.
 
 More more details see https://github.com/loosolab/TOBIAS/wiki/BINDetect
 
@@ -133,12 +135,12 @@ More more details see https://github.com/loosolab/TOBIAS/wiki/BINDetect
 
 This folder also contains:
 
-* bindetect_results.txt
-* bindetect_figures.pdf
+- bindetect_results.txt
+- bindetect_figures.pdf
 
 which are the key results for this contrast as a table and as plots.
 
-#### overview_{contrast}
+#### overview\_{contrast}
 
 All "bound" bed for all the TF motifs considered are concatenated together to be reported here as 2 sorted and indexed bed files. As these are indexed they can be easily loaded in a IGV session for visual inspection.
 

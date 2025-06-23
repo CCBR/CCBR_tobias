@@ -2,6 +2,7 @@
 
 - Fix wildcard not found error. (#10, @kelly-sovacool)
 - Fix resource error in `bindetect`. (#11, @kelly-sovacool, @batzza)
+- Add Zenodo DOI badge to README.
 
 ## CCBR_tobias 0.3.0
 
