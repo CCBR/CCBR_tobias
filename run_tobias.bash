@@ -39,7 +39,7 @@ function get_git_commitid_tag() {
 PIPELINE_HOME=$(readlink -f $(dirname "$0"))
 echo "Pipeline Dir: $PIPELINE_HOME"
 # set snakefile
-SNAKEFILE="${PIPELINE_HOME}/tobias.snakefile"
+SNAKEFILE="${PIPELINE_HOME}/Snakefile"
 
 # get github commit tag
 GIT_COMMIT_TAG=$(get_git_commitid_tag $PIPELINE_HOME)
